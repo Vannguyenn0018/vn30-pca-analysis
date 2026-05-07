@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -7,21 +8,26 @@ import plotly.graph_objects as go
 from sklearn.preprocessing import StandardScaler
 import datetime
 
-# --- 1. CẤU HÌNH GIAO DIỆN ---
-st.set_page_config(page_title="Phân Tích PCA VN30 - Nhóm 1", layout="wide")
+# --- CẤU HÌNH TRANG ---
+st.set_page_config(page_title="📊 Phân Tích Cấu Trúc VN30", page_icon="📈", layout="wide")
 
-# CSS tinh chỉnh giao diện y hệt bản thiết kế
+# CSS tùy chỉnh giao diện
 st.markdown("""
     <style>
-    [data-testid="stSidebar"] {background-color: #1E3A8A; color: white;}
-    [data-testid="stSidebar"] * {color: white !important;}
-    .main-header { font-size: 2.2rem; font-weight: bold; color: #1E3A8A; border-bottom: 2px solid #1E3A8A; padding-bottom: 10px; margin-bottom: 20px;}
-    .insight-box { background-color: #F0FDF4; padding: 15px; border-left: 5px solid #22C55E; border-radius: 5px; margin: 10px 0; color: #166534;}
-    .breakthrough-box { background-color: #FEF2F2; padding: 15px; border-left: 5px solid #EF4444; border-radius: 5px; margin: 10px 0; color: #991B1B;}
+    .main-header { font-size: 2.2rem; font-weight: bold; color: #1E3A8A; margin-bottom: 5px;}
+    .sub-header { font-size: 1.1rem; color: #64748B; margin-bottom: 20px;}
+    .insight-box { background-color: #F0F9FF; padding: 15px; border-left: 5px solid #0EA5E9; border-radius: 5px; margin-bottom: 15px;}
+    .breakthrough-box { background-color: #FFF1F2; padding: 15px; border-left: 5px solid #E11D48; border-radius: 5px; margin-bottom: 15px;}
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. LOGIC DỮ LIỆU & MAPPING NGÀNH (CHUẨN TỪ NOTEBOOK) ---
+st.markdown('<div class="main-header">Phân Tích Cấu Trúc Thị Trường VN30 Bằng PCA</div>', unsafe_allow_html=True)
+st.markdown('<div class="sub-header">Ứng dụng trực quan hóa thuật toán Machine Learning trong Tài chính</div>', unsafe_allow_html=True)
+
+# --- SIDEBAR & CACHING DỮ LIỆU ---
+st.sidebar.header("⚙️ Nguồn Dữ Liệu")
+
+# Mapping Ngành (Khớp tuyệt đối với file Notebook)
 sector_mapping = {
     "ACB.VN": "Ngân hàng", "BID.VN": "Ngân hàng", "CTG.VN": "Ngân hàng",
     "HDB.VN": "Ngân hàng", "MBB.VN": "Ngân hàng", "SHB.VN": "Ngân hàng",
@@ -35,110 +41,110 @@ sector_mapping = {
     "HPG.VN": "Vật liệu", "GVR.VN": "Công nghiệp/Cao su",
     "GAS.VN": "Năng lượng", "PLX.VN": "Năng lượng", "POW.VN": "Năng lượng"
 }
-tickers = list(sector_mapping.keys())
+vn30_tickers = list(sector_mapping.keys())
 
-# Fix triệt để lỗi "TypeError: module() takes at most 2 arguments"
+# Bỏ tham số ttl=3600 để fix triệt để lỗi TypeError trên một số phiên bản Streamlit
 @st.cache_data
-def get_data():
-    end = datetime.date.today()
-    start = end - datetime.timedelta(days=365)
-    data = yf.download(tickers, start=start, end=end)['Close']
-    # Điền khuyết dữ liệu 2 chiều để chắc chắn không có NaN gây lỗi PCA
-    data = data.ffill().bfill() 
+def load_stock_data():
+    end_date = datetime.date.today()
+    start_date = end_date - datetime.timedelta(days=365)
+    data = yf.download(vn30_tickers, start=start_date, end=end_date)['Close']
+    data = data.ffill().bfill() # Xử lý 2 chiều để chặn lỗi NaN khi tính Covariance
     return data
 
-df_prices = get_data()
+with st.spinner('Đang tải dữ liệu 30 mã từ Yahoo Finance (1 năm gần nhất)...'):
+    df_prices = load_stock_data()
+
+# Upload file VN30-Index thực tế
+st.sidebar.markdown("---")
+st.sidebar.markdown("**Tải lên file VN30-Index** (Tùy chọn)")
+st.sidebar.info("Upload file VN30.csv của bạn để so sánh PC1 với chỉ số thực tế.")
+uploaded_file = st.sidebar.file_uploader("Chọn file VN30.csv", type=["csv"])
+
+df_vn30_index = None
+if uploaded_file is not None:
+    try:
+        df_vn30_index = pd.read_csv(uploaded_file, parse_dates=['Ngày'], dayfirst=True)
+        df_vn30_index = df_vn30_index.set_index('Ngày').sort_index()
+        if 'Lần cuối' in df_vn30_index.columns:
+            df_vn30_index['VN30_Close'] = df_vn30_index['Lần cuối'].astype(str).str.replace(',', '').astype(float)
+        
+        df_vn30_index.index = df_vn30_index.index.tz_localize(None)
+        df_prices.index = df_prices.index.tz_localize(None)
+    except Exception as e:
+        st.sidebar.error(f"Lỗi đọc file CSV: {e}")
+
+# --- TIỀN XỬ LÝ & THUẬT TOÁN PCA ---
 df_returns = df_prices.pct_change().dropna()
 
-# --- TÍNH TOÁN THUẬT TOÁN PCA (GLOBAL CHO CÁC TABS) ---
+# Dùng StandardScaler chuẩn xác như trong file Notebook
 scaler = StandardScaler()
-scaled_returns = scaler.fit_transform(df_returns)
+df_returns_std = pd.DataFrame(scaler.fit_transform(df_returns), index=df_returns.index, columns=df_returns.columns)
 
-cov_matrix = np.cov(scaled_returns.T)
+cov_matrix = np.cov(df_returns_std.T)
+
+# Ép kiểu np.real để chống văng lỗi số phức khi Plotly vẽ biểu đồ
 eigenvalues, eigenvectors = np.linalg.eig(cov_matrix)
-
-# Ép kiểu số thực (loại bỏ số phức) để Plotly không bị crash
 eigenvalues = np.real(eigenvalues)
 eigenvectors = np.real(eigenvectors)
 
-idx = eigenvalues.argsort()[::-1]
-eigenvalues = eigenvalues[idx]
-eigenvectors = eigenvectors[:, idx]
+sorted_indices = np.argsort(eigenvalues)[::-1]
+eigenvalues_sorted = eigenvalues[sorted_indices]
+eigenvectors_sorted = eigenvectors[:, sorted_indices]
 
-# --- 3. SIDEBAR NAVIGATION ---
-with st.sidebar:
-    st.title("🍀 Nhóm 13 - PCA")
-    st.markdown("---")
-    menu = st.radio("Mục lục phân tích:", 
-                    ["🏠 Tổng quan dữ liệu", "📈 Phân tích Lợi suất", "🧬 Thuật toán PCA", "🏆 Kết luận ngành"])
+explained_variance_ratio = eigenvalues_sorted / np.sum(eigenvalues_sorted)
+cumulative_variance = np.cumsum(explained_variance_ratio)
 
-# --- 4. CÁC TABS NỘI DUNG ---
+pcs = df_returns_std.dot(eigenvectors_sorted)
+pcs.columns = [f"PC{i+1}" for i in range(pcs.shape[1])]
 
-if menu == "🏠 Tổng quan dữ liệu":
-    st.markdown('<div class="main-header">Phân Tích Cấu Trúc Thị Trường VN30</div>', unsafe_allow_html=True)
-    st.write("Dữ liệu giá đóng cửa 1 năm gần nhất của 30 cổ phiếu dẫn dắt thị trường (Đã xử lý nhiễu).")
-    st.dataframe(df_prices.tail(10), use_container_width=True)
-    
+# --- TẠO TABS HIỂN THỊ CHUẨN UI ---
+tab1, tab2, tab3, tab4 = st.tabs([
+    "1️⃣ Tiền xử lý Dữ liệu",
+    "2️⃣ Thuật toán PCA",
+    "3️⃣ So sánh PC1 & VN30",
+    "🚀 Nghiên cứu Chuyên sâu"
+])
+
+with tab1:
+    st.markdown("### Dữ liệu Giá Đóng Cửa (YFinance)")
+    st.dataframe(df_prices.tail())
+
+    st.markdown("### Dữ liệu Lợi Suất Chuẩn Hóa")
+    st.dataframe(df_returns_std.tail())
+
+    st.markdown('<div class="insight-box"><b>Tiền xử lý:</b> Dữ liệu được thu thập từ <code>yfinance</code>. Lợi suất hằng ngày được tính toán và chuẩn hóa (StandardScaler) để đảm bảo các cổ phiếu có thị giá cao không làm lệch mô hình PCA.</div>', unsafe_allow_html=True)
+
+with tab2:
+    st.markdown("### Xây dựng PCA bằng Ma trận Hiệp phương sai")
     col1, col2 = st.columns(2)
-    col1.info(f"Tổng số mẫu: {len(df_prices)} ngày giao dịch")
-    col2.success(f"Số lượng mã cổ phiếu: {len(tickers)} mã")
 
-elif menu == "📈 Phân tích Lợi suất":
-    st.markdown('<div class="main-header">Phân phối lợi suất hằng ngày</div>', unsafe_allow_html=True)
-    selected_stock = st.selectbox("Chọn cổ phiếu kiểm tra:", tickers)
-    
-    fig = px.histogram(df_returns, x=selected_stock, marginal="rug", 
-                       title=f"Histogram lợi suất của mã {selected_stock}",
-                       color_discrete_sequence=['#1E3A8A'])
-    st.plotly_chart(fig, use_container_width=True)
-
-elif menu == "🧬 Thuật toán PCA":
-    st.markdown('<div class="main-header">Phân tích thành phần chính (PCA)</div>', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    exp_var = eigenvalues / np.sum(eigenvalues)
-    
     with col1:
-        st.subheader("Giải thích phương sai (Scree Plot)")
-        fig_scree = go.Figure()
-        fig_scree.add_trace(go.Bar(x=[f"PC{i+1}" for i in range(10)], y=exp_var[:10]*100, name='Phương sai (%)'))
-        fig_scree.update_layout(yaxis_title="% Phương sai giải thích")
-        st.plotly_chart(fig_scree, use_container_width=True)
-        
+        st.markdown("**Ma trận Hiệp phương sai (Covariance Matrix):**")
+        fig_cov = px.imshow(cov_matrix[:10, :10], x=df_prices.columns[:10], y=df_prices.columns[:10], color_continuous_scale='RdBu_r')
+        fig_cov.update_layout(width=500, height=500)
+        st.plotly_chart(fig_cov, use_container_width=True)
+
     with col2:
-        st.subheader("Ma trận hiệp phương sai (Covariance Matrix)")
-        fig_heat = px.imshow(cov_matrix[:10, :10], labels=dict(color="Covariance"),
-                             x=tickers[:10], y=tickers[:10], color_continuous_scale='RdBu_r')
-        st.plotly_chart(fig_heat, use_container_width=True)
+        st.markdown("**Biểu đồ Scree Plot:**")
+        fig_scree = go.Figure()
+        fig_scree.add_trace(go.Bar(x=[f"PC{i+1}" for i in range(10)], y=explained_variance_ratio[:10]*100, name='Phương sai từng PC'))
+        fig_scree.add_trace(go.Scatter(x=[f"PC{i+1}" for i in range(10)], y=cumulative_variance[:10]*100, mode='lines+markers', name='Phương sai tích lũy'))
+        fig_scree.update_layout(yaxis_title="% Phương sai giải thích", hovermode="x unified")
+        st.plotly_chart(fig_scree, use_container_width=True)
 
-    st.markdown(f'<div class="insight-box"><b>Nhận xét:</b> Thành phần chính đầu tiên (PC1) giải thích được <b>{exp_var[0]*100:.2f}%</b> sự biến động của toàn bộ rổ VN30.</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="insight-box"><b>Nhận xét:</b> Thành phần chính đầu tiên (PC1) giải thích được <b>{explained_variance_ratio[0]*100:.2f}%</b> biến động toàn thị trường.</div>', unsafe_allow_html=True)
 
-elif menu == "🏆 Kết luận ngành":
-    st.markdown('<div class="main-header">Phát hiện "Sector Factors" (Nhân tố ngành)</div>', unsafe_allow_html=True)
-    
-    loadings = pd.DataFrame(eigenvectors[:, :3], 
-                            columns=['PC1_Market', 'PC2_BDS_vs_Energy', 'PC3_Financial_Rotation'], 
-                            index=tickers)
-    loadings['Ngành'] = loadings.index.map(sector_mapping)
-    
-    sector_res = loadings.groupby('Ngành').mean(numeric_only=True)
-    
-    st.subheader("Bản đồ nhiệt (Heatmap) trọng số trung bình theo Ngành")
-    fig_sector = px.imshow(sector_res.T, text_auto=".3f", color_continuous_scale='RdBu_r', aspect="auto")
-    st.plotly_chart(fig_sector, use_container_width=True)
-    
-    st.markdown("""
-    <div class="breakthrough-box">
-    <b>Kết luận chuyên sâu từ mô hình PCA:</b><br>
-    Việc gom cụm các hệ số Eigenvectors xác nhận có tồn tại các "Sector Factors" rõ rệt ẩn trong cấu trúc VN30:
-    <ul>
-        <li><b>PC1 (Nhân tố thị trường):</b> Hầu hết các ngành đều có xu hướng dịch chuyển cùng chiều, đại diện cho xu hướng chung của Vn-Index.</li>
-        <li><b>PC2 (Bất động sản vs Năng lượng):</b> Thể hiện sự phân kỳ cực kỳ rõ rệt giữa nhóm Bất động sản (Dương) và Năng lượng/Công nghiệp (Âm).</li>
-        <li><b>PC3 (Luân chuyển tài chính):</b> Phản ánh sự dịch chuyển dòng tiền liên quan mật thiết đến nhóm Ngân hàng/Chứng khoán so với các ngành khác.</li>
-    </ul>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.subheader("Bảng Trọng Số PC Chi Tiết Của Từng Mã")
-    st.dataframe(loadings.style.background_gradient(cmap='RdBu_r', subset=['PC1_Market', 'PC2_BDS_vs_Energy', 'PC3_Financial_Rotation']), use_container_width=True)
+with tab3:
+    st.markdown("### Phân tích Thành Phần Chính PC1 (Yếu Tố Thị Trường)")
+    col1, col2 = st.columns([1, 2])
+
+    pc1_weights = eigenvectors_sorted[:, 0]
+    if pc1_weights.mean() < 0:
+        pc1_weights = -pc1_weights
+        pcs['PC1'] = -pcs['PC1']
+
+    with col1:
+        st.markdown("**Trọng số cổ phiếu (PC1 Loadings):**")
+        df_weights = pd.DataFrame({'Ticker': df_prices.columns, 'Weight': pc1_weights}).sort_values(by='Weight')
+        fig_weights = px.bar(df_weights, x='Weight', y='Ticker
