@@ -67,7 +67,7 @@ eigenvectors = eigenvectors[:, idx]
 
 # --- 3. SIDEBAR NAVIGATION ---
 with st.sidebar:
-    st.title("🍀 Nhóm 1 - PCA")
+    st.title("🍀 Nhóm 13 - PCA")
     st.markdown("---")
     menu = st.radio("Mục lục phân tích:", 
                     ["🏠 Tổng quan dữ liệu", "📈 Phân tích Lợi suất", "🧬 Thuật toán PCA", "🏆 Kết luận ngành"])
