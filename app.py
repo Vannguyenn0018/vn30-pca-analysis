@@ -281,34 +281,59 @@ with tab4:
             
             st.success(f"📌 **Nhận xét:** Hai ma trận gần như trùng khớp hoàn toàn. Độ sai lệch MAE cực nhỏ: **{mae:.2e}**. Điều này khẳng định bước tính ma trận hiệp phương sai thủ công của ta là chính xác.")
             
-    elif selected_q == questions[2]:
+   elif selected_q_research == questions_list[2]:
         # --- Q2 ---
-        st.subheader("Q2. Nghiên cứu Gom cụm PC Loadings (Dendrogram & Grouped Bar)")
-        with st.spinner("⏳ Đang chạy Q2..."):
-            K_pc_compare = min(2, K_features)
-            loadings_cluster = loadings_df.iloc[:, :K_pc_compare].T # (PC, stocks) -> Cluster stocks
+        st.subheader("Q2. Nghiên cứu sâu Gom cụm PC Loadings (Gom cụm Gom PC1&PC2)")
+        with st.spinner("⏳ Đang thực thi Q2 Gom cụm..."):
+            # Lấy PC1 & PC2 loadings
+            k_pc_comp_q2 = min(2, K_features_main)
+            loadings_cluster_q2 = loadings_df_main.iloc[:, :k_pc_comp_q2] 
             
-            # Gom cụm phân cấp
-            Z = linkage(squareform( squareform( np.abs( standardized_df.iloc[:, :K_pc_compare].corr() ) ) ), 'ward')
-            clusters_idx = fcluster(Z, t=2, criterion='maxclust') # Gom thành 2 cụm chính
+            # --- Gawin Cập nhật groups_dict tại đây ---
+            # Thêm 'ACB', 'BID', 'CTG'... vào nhóm Ngân hàng, 
+            # thêm các mã khác vào nhóm tương ứng của chúng.
+            groups_dict = {
+                'ACB': 'Ngân hàng', 'BID': 'Ngân hàng', 'CTG': 'Ngân hàng', 'HDB': 'Ngân hàng', 'MBB': 'Ngân hàng',
+                'SHB': 'Ngân hàng', 'STB': 'Ngân hàng', 'TCB': 'Ngân hàng', 'TPB': 'Ngân hàng', 'VCB': 'Ngân hàng', 'VIB': 'Ngân hàng', 'VPB': 'Ngân hàng',
+                'BCM': 'Bất động sản', 'VHM': 'Bất động sản', 'VIC': 'Bất động sản', 'VRE': 'Bất động sản',
+                'FPT': 'Công nghệ',
+                'GAS': 'Năng lượng', 'PLX': 'Năng lượng', 'POW': 'Năng lượng',
+                'GVR': 'Cao su/Công nghiệp',
+                'HPG': 'Thép/Công nghiệp',
+                'MSN': 'Tiêu dùng', 'MWG': 'Tiêu dùng', 'SAB': 'Tiêu dùng', 'VNM': 'Tiêu dùng',
+                'SSI': 'Chứng khoán',
+                'VJC': 'Hàng không', 'BVH': 'Bảo hiểm', 'SSB': 'Ngân hàng' # Thêm SSB mới vào VN30
+            }
+            # --- Kết thúc cập nhật groups_dict ---
+
+            # Map nhóm ngành vào DataFrame loadings
+            # Gawin bẫy lỗi nhẹ: Nếu mã ko có trong groups_dict thì đặt là 'Khác'
+            loadings_cluster_q2['Sector'] = loadings_cluster_q2.index.map(groups_dict).fillna('Khác')
+
+            # Gom cụm phân cấp Hierarchical clustering (giữ nguyên Q2)
+            abs_corr_mat = np.abs(standardized_df.iloc[:, :k_pc_comp_q2].corr()) 
+            Z_q2 = linkage(squareform(squareform(abs_corr_mat)), 'ward')
+            clusters_idx_q2 = fcluster(Z_q2, t=2, criterion='maxclust') # Gom thành 2 cụm chính
             
             # Vẽ Dendrogram
             fig_dendro, ax = plt.subplots(figsize=(10, 4))
-            dendrogram(Z, labels=loadings_cluster.columns, ax=ax)
-            ax.set_title('Gom cụm phân cấp Cổ phiếu VN30 theo rủi ro thị trường (PC1&PC2)')
+            dendrogram(Z_q2, labels=stock_names_list, ax=ax)
+            ax.set_title('Q2 Gom cụm phân cấp Cổ phiếu VN30 theo rủi ro thị trường (PC1&PC2)')
             st.pyplot(fig_dendro)
             
-            # Vẽ grouped bar chart theo cụm
-            clustered_loadings = loadings_df.copy()
-            clustered_loadings['Cluster'] = clusters_idx
-            fig_clustered_bar = px.bar(clustered_loadings, x=clustered_loadings.index, y=['PC1', 'PC2'],
-                                        color='Cluster', color_continuous_scale='coolwarm',
-                                        labels={'value': 'Loading'}, barmode='group')
-            fig_clustered_bar.update_layout(title="So sánh PC Loadings Gom cụm", template="plotly_white")
-            st.plotly_chart(fig_clustered_bar, use_container_width=True)
+            # Grouped Bar chart compare loadings across clusters and sectors
+            clustered_loadings_all_q2 = loadings_cluster_q2.copy() # Sử dụng loadings đã map sector
+            clustered_loadings_all_q2['Cluster'] = clusters_idx_q2
+            clustered_loadings_all_q2.sort_values(by=['Cluster', 'PC1'], ascending=[True, False], inplace=True)
             
-            st.success("📌 **Nhận xét:** Gom cụm PC Loadings giúp ta nhận diện rõ nét các nhóm cổ phiếu 'đồng pha' (thường là cùng ngành hoặc đặc tính rủi ro tương tự). Cụm xanh thường gom chặt các mã Ngân hàng lớn, Cụm đỏ gom các mã phân cực ngành khác.")
+            fig_grouped_bar_comp_q2 = px.bar(clustered_loadings_all_q2, x=clustered_loadings_all_q2.index, y=['PC1', 'PC2'],
+                                        color='Sector', # Gawin sửa tô màu theo 'Sector' (nhóm ngành)
+                                        color_discrete_scale='viridis',
+                                        labels={'value': 'Loading', 'index': 'Cổ phiếu', 'Sector': 'Nhóm ngành'}, barmode='group')
+            fig_grouped_bar_comp_q2.update_layout(title="So sánh PC Loadings Gom cụm theo Cụm và Nhóm ngành", template="plotly_white")
+            st.plotly_chart(fig_grouped_bar_comp_q2, use_container_width=True)
             
+            st.success("📌 **Nhận xét Q2:** Gom cụm PC Loadings giúp ta nhận diện rõ nét các nhóm cổ phiếu 'đồng pha' (thường là cùng ngành). Biểu đồ Bar chart trên cho thấy nhóm Ngân hàng (cụm đỏ) gom chặt lại, trong khi các ngành khác phân hóa sang cụm khác.")
     elif selected_q == questions[3]:
         # --- Q3 ---
         st.subheader("Q3. Nghiên cứu Ma trận Tương quan Tỷ suất sinh lợi (Log Returns)")
