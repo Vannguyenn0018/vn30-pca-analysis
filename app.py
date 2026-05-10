@@ -236,7 +236,7 @@ with tab3:
         """)
 # --- TAB 4: Nghiên cứu chuyên sâu ---
 with tab4:
-     st.header("4. Phần Nghiên cứu chuyên sâu (Revised)")
+    st.header("4. Phần Nghiên cứu chuyên sâu (Revised)")
     st.markdown("🔍 Khám phá sâu qua các câu hỏi nghiên cứu.")
     
     # Thanh thả thả chọn câu hỏi nghiên cứu Q1-Q6
