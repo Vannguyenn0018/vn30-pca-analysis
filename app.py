@@ -27,7 +27,7 @@ plt.rcParams['axes.unicode_minus'] = False
 # ==========================================
 
 @st.cache_data
-def load_historical_data(file_name="VN30_historical.csv"):
+def load_historical_data(file_name="VN30.csv"):
     """Đọc dữ liệu lịch sử VN30 từ CSV."""
     if not os.path.exists(file_name):
         st.error(f"❌ Không tìm thấy file dữ liệu lịch sử {file_name}. Vui lòng đảm bảo file CSV có sẵn trong cùng thư mục với app.py.")
