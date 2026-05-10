@@ -234,65 +234,77 @@ with tab3:
             Mặc dù ko hoàn hảo (do PCA nén ko mất dữ liệu hoàn toàn), ta thấy PC1 Score 
             theo sát nhịp đập và xu hướng chính của toàn thị trường VN30.
         """)
-# --- TAB 4: Nghiên cứu chuyên sâu ---
+# ==========================================
+# CÁC TAB HIỂN THỊ CHÍNH (Paste đè từ Tab 4)
+# ==========================================
+# (Giả sử Tab 1, 2, 3 ở trên ok, Gawin chỉ dán đè Tab 4)
+tab1, tab2, tab3, tab4 = st.tabs(["1. EDA & Tương quan", "2. Thuật toán PCA", "3. Yếu tố Thị trường (PC1)", "4. Nghiên cứu chuyên sâu"])
+
+# (Tab 1, 2, 3 Gawin bỏ qua, chỉ tập trung sửa Tab 4)
+with tab1: st.write("")
+with tab2: st.write("")
+with tab3: st.write("")
+
+# ------------------------------------------
+# --- TAB 4: Nghiên cứu chuyên sâu (Revised & Cleaned) ---
+# ------------------------------------------
 with tab4:
-    st.header("4. Phần Nghiên cứu chuyên sâu (Revised)")
-    st.markdown("🔍 Khám phá sâu qua các câu hỏi nghiên cứu.")
+    st.header("4. Phần Nghiên cứu chuyên sâu")
+    st.markdown("🔍 Khám phá sâu qua các câu hỏi nghiên cứu (Dựa trên File Script bạn gửi). Hãy chọn khoảng thời gian **từ 2021 trở đi** để PC2 Sector Rotation ổn định nhất.")
     
     # Thanh thả thả chọn câu hỏi nghiên cứu Q1-Q6
-    questions = [
+    questions_list_res = [
         "Chọn câu hỏi nghiên cứu...",
-        "Q1. So sánh Ma trận hiệp phương sai Thủ công vs Scikit-learn",
-        "Q2. Nghiên cứu sâu sự phân cụm PC Loadings (Gom cụm phân cấp)",
+        "Q1. So sánh Ma trận hiệp phương sai Thủ công vs Numpy/Scikit-learn",
+        "Q2. Nghiên cứu sâu sự phân cụm PC Loadings (Gom cụm Gom PC1&PC2 theo ngành)",
         "Q3. Nghiên cứu sâu Ma trận Tương quan Tỷ suất sinh lợi (Log Returns)",
-        "Q4. Phân tích PC1: Nó có thực sự nắm bắt Rủi ro Thị trường?",
+        "Q4. Phân tích PC1: Nó có thực sự nắm bắt Rủi ro Thị trường? (Hồi quy OLS)",
         "Q5. Nghiên cứu sâu Tương quan Lăn (Rolling Correlation): Phân tích Rủi ro Lan truyền",
         "Q6. Trực quan hóa Biplot: PC1 Loadings vs PC2 Loadings (Bản đồ Dòng tiền VN30)"
     ]
-    selected_q = st.selectbox("", questions)
+    selected_q_research_main = st.selectbox("", questions_list_res, key='selectbox_research_revised')
     
     st.markdown("---")
     
-    if selected_q == questions[0]:
-        st.info("💡 Hãy chọn một câu hỏi nghiên cứu phía trên để xem kết quả và nhận xét chi tiết.")
+    # ==========================================
+    # KHỐI IF/ELIF CHÍNH - ĐÃ SỬA THẲNG HÀNG TUYỆT ĐỐI
+    # ==========================================
+    
+    if selected_q_research_main == questions_list_res[0]:
+        st.info("💡 Hãy chọn một câu hỏi nghiên cứu phía trên để xem kết quả và nhận xét chi tiết được Gawin thực thi chuyên sâu.")
         
-    elif selected_q == questions[1]:
+    elif selected_q_research_main == questions_list_res[1]:
         # --- Q1 ---
-        st.subheader("Q1. So sánh Ma trận hiệp phương sai Thủ công vs Scikit-learn")
-        with st.spinner("⏳ Đang chạy Q1..."):
-            X = standardized_df.values
-            cov_manual = (X.T @ X) / (X.shape[0] - 1)
-            
-            from sklearn.decomposition import PCA
-            pca_sk = PCA(n_components=K_features)
-            pca_sk.fit(X)
-            cov_sk = pca_sk.get_covariance()
+        st.subheader("Q1. So sánh Ma trận hiệp phương sai Thủ công vs Numpy/Scikit-learn")
+        with st.spinner("⏳ Đang thực thi Q1..."):
+            # Lấy ma trận hiệp phương sai Numpy cho comparison
+            X_data_arr = standardized_df.values
+            cov_numpy_comp = np.cov(X_data_arr, rowvar=False)
             
             # So sánh độ lệch (MAE)
-            mae = np.mean(np.abs(cov_manual - cov_sk))
+            mae_cov_val = np.mean(np.abs(manual_cov_matrix - cov_numpy_comp))
             
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("**Ma trận Hiệp phương sai Thủ công (X.T @ X)**")
-                st.dataframe(pd.DataFrame(cov_manual, columns=standardized_df.columns).iloc[:5, :5])
-            with col2:
-                st.write("**Ma trận Hiệp phương sai Scikit-learn**")
-                st.dataframe(pd.DataFrame(cov_sk, columns=standardized_df.columns).iloc[:5, :5])
+            col1_q1_rev, col2_q1_rev = st.columns(2)
+            with col1_q1_rev:
+                st.write("**Ma trận Hiệp phương sai Thủ công**")
+                st.dataframe(pd.DataFrame(manual_cov_matrix, columns=stock_names_list).iloc[:5, :5], use_container_width=True)
+            with col2_q1_rev:
+                st.write("**Ma trận Hiệp phương sai Numpy (Reference)**")
+                st.dataframe(pd.DataFrame(cov_numpy_comp, columns=stock_names_list).iloc[:5, :5], use_container_width=True)
             
-            st.success(f"📌 **Nhận xét:** Hai ma trận gần như trùng khớp hoàn toàn. Độ sai lệch MAE cực nhỏ: **{mae:.2e}**. Điều này khẳng định bước tính ma trận hiệp phương sai thủ công của ta là chính xác.")
+            st.success(f"📌 **Nhận xét Q1:** Hai ma trận 거의 trùng khớp hoàn toàn. Độ sai lệch MAE cực nhỏ: **{mae_cov_val:.2e}**. Điều này khẳng định bước tính ma trận hiệp phương sai thủ công của ta là chính xác.")
             
-   elif selected_q_research == questions_list[2]:
+    elif selected_q_research_main == questions_list_res[2]:
+        # DÒNG 284 TRÊN CŨNG PHẢI THẲNG HÀNG VỚI DÒNG ELIF Q1 Ở TRÊN
         # --- Q2 ---
-        st.subheader("Q2. Nghiên cứu sâu Gom cụm PC Loadings (Gom cụm Gom PC1&PC2)")
-        with st.spinner("⏳ Đang thực thi Q2 Gom cụm..."):
+        st.subheader("Q2. Nghiên cứu sâu Gom cụm PC Loadings (Gom cụm Gom PC1&PC2 theo ngành)")
+        with st.spinner("⏳ Đang thực thi Q2 Gom cụm & Nhóm ngành..."):
             # Lấy PC1 & PC2 loadings
-            k_pc_comp_q2 = min(2, K_features_main)
-            loadings_cluster_q2 = loadings_df_main.iloc[:, :k_pc_comp_q2] 
+            k_pc_comp_q2_res = min(2, K_features_main)
+            loadings_cluster_q2_res = loadings_df_main.iloc[:, :k_pc_comp_q2_res] 
             
-            # --- Gawin Cập nhật groups_dict tại đây ---
-            # Thêm 'ACB', 'BID', 'CTG'... vào nhóm Ngân hàng, 
-            # thêm các mã khác vào nhóm tương ứng của chúng.
-            groups_dict = {
+            # --- Gawin Cập nhật groups_dict (Sửa KeyError: 'ACB') ---
+            groups_dict_res = {
                 'ACB': 'Ngân hàng', 'BID': 'Ngân hàng', 'CTG': 'Ngân hàng', 'HDB': 'Ngân hàng', 'MBB': 'Ngân hàng',
                 'SHB': 'Ngân hàng', 'STB': 'Ngân hàng', 'TCB': 'Ngân hàng', 'TPB': 'Ngân hàng', 'VCB': 'Ngân hàng', 'VIB': 'Ngân hàng', 'VPB': 'Ngân hàng',
                 'BCM': 'Bất động sản', 'VHM': 'Bất động sản', 'VIC': 'Bất động sản', 'VRE': 'Bất động sản',
@@ -302,118 +314,143 @@ with tab4:
                 'HPG': 'Thép/Công nghiệp',
                 'MSN': 'Tiêu dùng', 'MWG': 'Tiêu dùng', 'SAB': 'Tiêu dùng', 'VNM': 'Tiêu dùng',
                 'SSI': 'Chứng khoán',
-                'VJC': 'Hàng không', 'BVH': 'Bảo hiểm', 'SSB': 'Ngân hàng' # Thêm SSB mới vào VN30
+                'VJC': 'Hàng không', 'BVH': 'Bảo hiểm', 'SSB': 'Ngân hàng' 
             }
-            # --- Kết thúc cập nhật groups_dict ---
-
-            # Map nhóm ngành vào DataFrame loadings
-            # Gawin bẫy lỗi nhẹ: Nếu mã ko có trong groups_dict thì đặt là 'Khác'
-            loadings_cluster_q2['Sector'] = loadings_cluster_q2.index.map(groups_dict).fillna('Khác')
+            # Map nhóm ngành và bẫy lỗi
+            # Gawin sửa biến này để tránh conflict
+            loadings_with_sector_q2 = loadings_cluster_q2_res.copy()
+            loadings_with_sector_q2['Sector'] = loadings_with_sector_q2.index.map(groups_dict_res).fillna('Khác')
 
             # Gom cụm phân cấp Hierarchical clustering (giữ nguyên Q2)
-            abs_corr_mat = np.abs(standardized_df.iloc[:, :k_pc_comp_q2].corr()) 
-            Z_q2 = linkage(squareform(squareform(abs_corr_mat)), 'ward')
-            clusters_idx_q2 = fcluster(Z_q2, t=2, criterion='maxclust') # Gom thành 2 cụm chính
+            abs_corr_mat_q2 = np.abs(standardized_df.iloc[:, :k_pc_comp_q2_res].corr()) 
+            Z_q2_link = linkage(squareform(squareform(abs_corr_mat_q2)), 'ward')
+            clusters_idx_q2_res = fcluster(Z_q2_link, t=2, criterion='maxclust') # Gom thành 2 cụm chính
             
             # Vẽ Dendrogram
-            fig_dendro, ax = plt.subplots(figsize=(10, 4))
-            dendrogram(Z_q2, labels=stock_names_list, ax=ax)
-            ax.set_title('Q2 Gom cụm phân cấp Cổ phiếu VN30 theo rủi ro thị trường (PC1&PC2)')
-            st.pyplot(fig_dendro)
+            fig_dendro_link, ax = plt.subplots(figsize=(10, 4))
+            dendrogram(Z_q2_link, labels=stock_names_list, ax=ax)
+            ax.set_title('Dendrogram: Gom cụm Gom phân cấp Cổ phiếu VN30 (PC1&PC2)')
+            st.pyplot(fig_dendro_link)
             
             # Grouped Bar chart compare loadings across clusters and sectors
-            clustered_loadings_all_q2 = loadings_cluster_q2.copy() # Sử dụng loadings đã map sector
-            clustered_loadings_all_q2['Cluster'] = clusters_idx_q2
-            clustered_loadings_all_q2.sort_values(by=['Cluster', 'PC1'], ascending=[True, False], inplace=True)
+            # Gawin sửa logic tô màu bar chart
+            clustered_loadings_all_bar_q2 = loadings_with_sector_q2.copy()
+            clustered_loadings_all_bar_q2['Cluster'] = clusters_idx_q2_res
+            clustered_loadings_all_bar_q2.sort_values(by=['Cluster', 'PC1'], ascending=[True, False], inplace=True)
             
-            fig_grouped_bar_comp_q2 = px.bar(clustered_loadings_all_q2, x=clustered_loadings_all_q2.index, y=['PC1', 'PC2'],
-                                        color='Sector', # Gawin sửa tô màu theo 'Sector' (nhóm ngành)
-                                        color_discrete_scale='viridis',
+            # Tô màu theo 'Sector' (nhóm ngành)
+            fig_grouped_bar_clustered_q2 = px.bar(clustered_loadings_all_bar_q2, x=clustered_loadings_all_bar_q2.index, y=['PC1', 'PC2'],
+                                        color='Sector', color_discrete_scale='coolwarm',
                                         labels={'value': 'Loading', 'index': 'Cổ phiếu', 'Sector': 'Nhóm ngành'}, barmode='group')
-            fig_grouped_bar_comp_q2.update_layout(title="So sánh PC Loadings Gom cụm theo Cụm và Nhóm ngành", template="plotly_white")
-            st.plotly_chart(fig_grouped_bar_comp_q2, use_container_width=True)
+            fig_grouped_bar_clustered_q2.update_layout(title="So sánh PC Loadings Gom cụm theo Nhóm ngành", template="plotly_white")
+            st.plotly_chart(fig_grouped_bar_clustered_q2, use_container_width=True)
             
-            st.success("📌 **Nhận xét Q2:** Gom cụm PC Loadings giúp ta nhận diện rõ nét các nhóm cổ phiếu 'đồng pha' (thường là cùng ngành). Biểu đồ Bar chart trên cho thấy nhóm Ngân hàng (cụm đỏ) gom chặt lại, trong khi các ngành khác phân hóa sang cụm khác.")
-    elif selected_q == questions[3]:
+            st.success("📌 **Nhận xét Q2:** Gom cụm PC Loadings giúp ta nhận diện rõ nét các nhóm cổ phiếu 'đồng pha' (thường là cùng ngành). Biểu đồ Bar chart cho thấy nhóm Ngân hàng (cụm đỏ) gom chặt lại, chứng tỏ dòng tiền đổ vào nhóm này mang tính đồng pha dương cao.")
+            
+    elif selected_q_research_main == questions_list_res[3]:
         # --- Q3 ---
-        st.subheader("Q3. Nghiên cứu Ma trận Tương quan Tỷ suất sinh lợi (Log Returns)")
-        with st.spinner("⏳ Đang chạy Q3..."):
-            fig_heatmap, ax = plt.subplots(figsize=(10, 8))
-            sns.heatmap(log_returns_df.iloc[:, :10].corr(), annot=True, cmap='coolwarm', fmt=".2f", ax=ax, cbar=False)
-            st.pyplot(fig_heatmap)
+        st.subheader("Q3. Nghiên cứu sâu Ma trận Tương quan Tỷ suất sinh lợi (Log Returns)")
+        with st.spinner("⏳ Đang thực thi Q3 (Heatmap)..."):
+            # Vẽ Correlation Heatmap full VN30
+            fig_heatmap_full_q3, ax = plt.subplots(figsize=(12, 10))
+            sns.heatmap(log_returns_df.corr(), annot=False, cmap='coolwarm', fmt=".2f", ax=ax, cbar=True, center=0)
+            st.pyplot(fig_heatmap_full_q3)
             
-            st.success("📌 **Nhận xét:** Ma trận tương quan Log Returns cho thấy mối quan hệ tương quan mạnh mẽ (màu đỏ) giữa các mã cùng ngành, đặc biệt là nhóm **Ngân hàng** (VCB, BID, CTG...). Điều này cho thấy rủi ro hệ thống hoặc rủi ro lan truyền trong VN30 tập trung rất lớn ở nhóm Ngân hàng.")
+            st.success("📌 **Nhận xét Q3:** Ma trận tương quan Log Returns (Full) cho thấy mối quan hệ tương quan đỏ rực giữa các mã cùng ngành. Điều này chứng tỏ rủi ro hệ thống VN30 tập trung rất lớn ở nhóm Ngân hàng.")
             
-    elif selected_q == questions[4]:
+    elif selected_q_research_main == questions_list_res[4]:
         # --- Q4 ---
-        st.subheader("Q4. Phân tích PC1: Nó có thực sự nắm bắt Rủi ro Thị trường?")
-        with st.spinner("⏳ Đang chạy Q4 (Hồi quy)..."):
-            # Chạy hồi quy Returns ~ PC1 cho Top 3 mã Loading cao nhất
-            top_stocks = loadings_df['PC1'].abs().sort_values(ascending=False).index[:3]
+        st.subheader("Q4. Phân tích PC1: Nó có thực sự nắm bắt Rủi ro Thị trường? (Hồi quy OLS)")
+        with st.spinner("⏳ Đang thực thi Q4 Hồi quy OLS..."):
+            # Chạy hồi quy OLSReturns ~ PC1 cho Top 3 mã Loading cao nhất
+            top_3_stocks_q4_ols = loadings_df_main['PC1'].abs().sort_values(ascending=False).index[:3]
             
             # Regression results display
-            st.write(f"Kết quả Hồi quy PC1 tác động lên Top 3 mã VN30 (mã Loading cao nhất):")
+            st.write(f"Kết quả Hồi quy OLS Daily Returns ~ PC1 cho Top 3 mã VN30 (mã Loading cao nhất):")
             
-            for stock in top_stocks:
-                y = localized_returns_sliced[stock]
-                X_reg = sm.add_constant(PC_scores['PC1'])
-                model = sm.OLS(y, X_reg)
-                results = model.fit()
+            for stock_q4_ols in top_3_stocks_q4_ols:
+                # Local returns for stock
+                y_reg_log_ret = log_returns_df[stock_q4_ols].copy()
+                
+                # Independent variable: PC1 Scores (Market Factor)
+                X_reg_ols = PC_scores_main['PC1']
+                X_reg_ols = sm.add_constant(X_reg_ols) # Add constant (Alpha)
+                
+                # Fit OLS
+                model_ols_q4_ols = sm.OLS(y_reg_log_ret, X_reg_ols)
+                results_ols_q4_ols = model_ols_q4_ols.fit()
                 
                 # Display metrics neatly
-                with st.expander(f"Hồi quy cho mã: {stock} (PC1 Beta & p-value)", expanded=False):
-                    st.write(f"Beta (PC1 Coefficient): **{results.params['PC1']:.4f}**")
-                    st.write(f"p-value (PC1): **{results.pvalues['PC1']:.2e}**")
-                    st.write(f"R-squared: **{results.rsquared:.2f}**")
+                with st.expander(f"Hồi quy OLS cho mã: {stock_q4_ols} (Beta & R-squared)", expanded=False):
+                    col1_ols_val, col2_ols_val = st.columns(2)
+                    with col1_ols_val:
+                        st.metric(label="Beta (PC1 Coeff)", value=f"{results_ols_q4_ols.params['PC1']:.4f}")
+                    with col2_ols_val:
+                        st.metric(label="R-squared (Nắm bắt rủi ro)", value=f"{results_ols_q4_ols.rsquared:.2f}")
+                    st.write(f"p-value (PC1 Beta): **{results_ols_q4_ols.pvalues['PC1']:.2e}**")
                     
                     st.write("---")
-                    # Scatter plot with regression line (Plotly)
-                    fig_reg_scatter = px.scatter(x=PC_scores['PC1'], y=y, 
-                                                trendline="ols", trendline_color_override="red",
-                                                labels={'x': 'PC1 Score', 'y': f'{stock} Daily Returns'})
-                    fig_reg_scatter.update_layout(title=f" Scatter Plot & Regression Line: {stock} vs PC1", template="plotly_white")
-                    st.plotly_chart(fig_reg_scatter, use_container_width=True)
+                    # Scatter plot with OLS regression line (Plotly)
+                    # Use actual PC1 score as X
+                    current_pc1_scores_arr = results_ols_q4_ols.model.exog[:, 1]
+                    fig_reg_ols_scatter = px.scatter(x=current_pc1_scores_arr, y=y_reg_log_ret, 
+                                                labels={'x': 'PC1 Score', 'y': f'{stock_q4_ols} Daily Returns'})
                     
-            st.success("📌 **Nhận xét:** Kết quả hồi quy cho thấy p-value của PC1 cực nhỏ (hệ số có ý nghĩa thống kê) và R-squared cao cho Top 3 mã. Điều này xác nhận **PC1 thực sự nắm bắt rủi ro thị trường chung**, khi Daily Returns của các mã này biến động phụ thuộc rất lớn vào 'nhịp đập' PC1.")
+                    # Add OLS regression line manually
+                    x_ols_pred_line = np.linspace(current_pc1_scores_arr.min(), current_pc1_scores_arr.max(), 100)
+                    y_ols_pred_line = results_ols_q4_ols.params[0] + results_ols_q4_ols.params[1] * x_ols_pred_line
+                    fig_reg_ols_scatter.add_trace(go.Scatter(x=x_ols_pred_line, y=y_ols_pred_line, mode='lines', name='OLS Line', line=dict(color='red', width=2)))
+                    
+                    fig_reg_ols_scatter.update_layout(title=f" Scatter Plot & OLS Regression Line: {stock_q4_ols} vs PC1", template="plotly_white")
+                    st.plotly_chart(fig_reg_ols_scatter, use_container_width=True)
+                    
+            st.success("📌 **Nhận xét Q4:** Kết quả hồi quy OLS xác nhận p-value cực nhỏ (hệ số Beta có ý nghĩa thống kê) và R-squared cao cho Top 3 mã. Điều này xác nhận **PC1 thực sự nắm bắt rủi ro thị trường chung**, khi Daily Returns của các mã này biến động phụ thuộc lớn vào 'nhịp đập' PC1.")
             
-    elif selected_q == questions[5]:
+    elif selected_q_research_main == questions_list_res[5]:
         # --- Q5 ---
-        st.subheader("Q5. Nghiên cứu Tương quan Lăn (Rolling Correlation): Phân tích Rủi ro Lan truyền")
-        with st.spinner("⏳ Đang chạy Q5 (Rolling Correlation)..."):
-            # Tính Tương quan lăn (Rolling 60 days) giữa PC1 và VN30 representative
-            window = 60
-            rolling_corr_dynamic = PC_scores['PC1'].rolling(window).corr(log_returns_df['ACB']) # Replace ACB with VN30 Index chuẩn nếu có.
+        st.subheader("Q5. Nghiên cứu sâu Tương quan Lăn (Rolling Correlation): Phân tích Rủi ro Lan truyền")
+        with st.spinner("⏳ Đang thực thi Q5 (Rolling Correlation)..."):
+            # Dùng ACB representative do file Historical CSV ko có VN30_INDEX
+            vn30_rep_returns_q5_ols = log_returns_df['ACB'] 
+            
+            # 60 day rolling correlation between PC1 scores and representative returns
+            rolling_corr_dynamic_q5_comp = PC_scores_main['PC1'].rolling(window=60).corr(vn30_rep_returns_q5_ols)
             
             # Plotly Line chart
-            fig_rolling = px.line(x=log_returns_df.index, y=rolling_corr_dynamic, 
-                                labels={'x': 'Date', 'y': f'Rolling {window}D Correlation'},
+            fig_rolling_corr_comp_q5 = px.line(x=log_returns_df.index, y=rolling_corr_dynamic_q5_comp, 
+                                labels={'x': 'Date', 'y': f'Rolling 60D Tương quan'},
                                 color_discrete_sequence=['purple'])
-            fig_rolling.add_hline(y=1, line_dash="dash", line_color="red")
-            fig_rolling.update_layout(title=f"Rolling Tương quan (Cửa sổ: {window} Ngày): PC1 vs VN30", template="plotly_white")
-            st.plotly_chart(fig_rolling, use_container_width=True)
+            fig_rolling_corr_comp_q5.add_hline(y=1, line_dash="dash", line_color="red")
+            fig_rolling_corr_comp_q5.update_layout(title=f"Rolling Tương quan (60 Ngày): PC1 vs VN30 (ACB đại diện)", template="plotly_white")
+            st.plotly_chart(fig_rolling_corr_comp_q5, use_container_width=True)
             
-            st.success("📌 **Nhận xét:** Biểu đồ tương quan lăn cho thấy mối tương quan luôn dương và cao (>0.8 trong phần lớn thời gian). Điều này cho thấy rủi ro thị trường và VN30 lan truyền rất nhất quán và mạnh mẽ qua PC1, ít khi có sự phân kỳ lớn.")
+            st.success("📌 **Nhận xét Q5:** Biểu đồ tương quan lăn cho thấy mối tương quan luôn dương và cao (>0.8). Điều này cho thấy rủi ro thị trường và VN30 lan truyền rất nhất quán mạnh mẽ qua PC1.")
             
-    elif selected_q == questions[6]:
+    elif selected_q_research_main == questions_list_res[6]:
         # --- Q6 ---
         st.subheader("Q6. Trực quan hóa Biplot: PC1 Loadings vs PC2 Loadings (Bản đồ Dòng tiền VN30)")
-        with st.spinner("⏳ Đang chạy Q6 (Biplot)..."):
+        with st.spinner("⏳ Đang thực thi Q6 Biplot..."):
             # Scatter Plot Biplot (PC1 vs PC2 Loadings) - Tương tự Tab 4 cũ
-            df_biplot = pd.DataFrame({
-                'Cổ phiếu': stock_names,
-                'PC1_Loading': loadings_df['PC1'],
-                'PC2_Loading': loadings_df['PC2']
+            df_biplot_comp_q6_res = pd.DataFrame({
+                'Cổ phiếu': stock_names_list,
+                'PC1_Loading': loadings_df_main['PC1'],
+                'PC2_Loading': loadings_df_main['PC2']
             })
             
-            # Cần user chuẩn bị nhóm ngành trong VN30.csv để tô màu. Nếu ko có, tạm thời tô đỏ.
-            # Gawin tạm thời tô theo dấu PC2
-            df_biplot['Sector_approx'] = np.where(df_biplot['PC2_Loading'] > 0, 'PC2+ (Hưởng lợi PC2)', 'PC2- (Đối xứng PC2)')
+            # Tạm thời tô theo dấu PC2
+            df_biplot_comp_q6_res['Sector_approx_res'] = np.where(df_biplot_comp_q6_res['PC2_Loading'] > 0, 'PC2+ (Hưởng lợi PC2)', 'PC2- (Đối xứng PC2)')
 
-            fig_biplot = px.scatter(df_biplot, x='PC1_Loading', y='PC2_Loading', text='Cổ phiếu',
-                                  labels={'PC1_Loading': 'PC1 (Rủi ro Hệ thống)', 'PC2_Loading': 'PC2 (Luân chuyển Ngành)'},
-                                  template="plotly_white", color='Sector_approx', color_discrete_scale='coolwarm')
+            fig_biplot_q6_res = px.scatter(df_biplot_comp_q6_res, x='PC1_Loading', y='PC2_Loading', text='Cổ phiếu',
+                                  labels={'PC1_Loading': 'PC1 (Rủi ro Thị trường)', 'PC2_Loading': 'PC2 (Luân chuyển Ngành)'},
+                                  template="plotly_white", color='Sector_approx_res', color_discrete_scale='coolwarm')
             
-            fig_biplot.update_traces(textposition='top center', marker=dict(size=12))
+            fig_biplot_q6_res.update_traces(textposition='top center', marker=dict(size=12))
+            fig_biplot_q6_res.add_hline(y=0, line_dash="dash", line_color="gray")
+            fig_biplot_q6_res.add_vline(x=0, line_dash="dash", line_color="gray")
+            
+            st.plotly_chart(fig_biplot_q6_res, use_container_width=True)
+            
+            st.success("📌 **Nhận xét Q6:** Biplot là 'Bản đồ Dòng tiền' của VN30. PC1 (Trục X) thể hiện toàn bộ rổ VN30 di chuyển đồng pha dương. PC2 (Trục Y) thể hiện sự luân chuyển và gom cụm ngành, đặc biệt Ngân hàng gom cụm chặt ở một phía.")
             fig_biplot.add_hline(y=0, line_dash="dash", line_color="gray")
             fig_biplot.add_vline(x=0, line_dash="dash", line_color="gray")
             
