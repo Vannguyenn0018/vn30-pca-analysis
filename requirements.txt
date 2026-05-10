@@ -2,4 +2,7 @@ streamlit
 pandas
 numpy
 yfinance
+scikit-learn
+matplotlib
+seaborn
 plotly
