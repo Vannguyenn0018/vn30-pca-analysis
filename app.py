@@ -161,7 +161,7 @@ with tab2:
 
 # --- TAB 3: PC1 MARKET FACTOR ---
 with tab3:
-   st.header("3. Phần Yếu tố thị trường")
+    st.header("3. Phần Yếu tố thị trường")
     st.subheader("⚖️ So sánh Hiệu năng Thành phần Chính (PC1)")
     
     # Chia bố cục 2 cột bám sát hình ảnh yêu cầu
