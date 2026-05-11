@@ -206,8 +206,7 @@ with tab2:
         st.plotly_chart(fig_scree, use_container_width=True)
         st.info(f"💡 **Insight:** Chỉ với 1 thành phần chính đầu tiên (PC1) đã giải thích được **{explained_variance_ratio[0]:.2f}%** toàn bộ biến động của rổ VN30.")
 
-# --- TAB 3: PC1 MARKET FACTOR ---
-with tab3:
+
     # --- TAB 3: YẾU TỐ THỊ TRƯỜNG (FULL WIDTH LAYOUT) ---
 with tab3:
     st.header("3. Phần Yếu tố thị trường")
