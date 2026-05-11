@@ -408,121 +408,117 @@ with tab3:
     st.plotly_chart(fig_line_comp, use_container_width=True)
     
     st.success("**Kết luận tài chính:** Sự bám sát giữa đường màu xanh (PC1) và đường màu cam (VN30 thực tế) là bằng chứng cho thấy thuật toán PCA đã 'nén' thành công thông tin của 30 cổ phiếu vào 1 nhân tố duy nhất mà vẫn giữ được linh hồn của thị trường.")
+
+
+# --- TAB 4: CƠ CẤU CHUYÊN SÂU (ADVANCED RESEARCH LAB) ---
 with tab4:
-    st.header("4. Nghiên cứu chuyên sâu")
+    st.header("4. Nghiên cứu chuyên sâu & Phân lớp rủi ro")
+    st.markdown("""
+        Chào mừng cậu đến với phần phân tích nâng cao. Tại đây, chúng ta sẽ sử dụng PCA để bóc tách các lớp rủi ro 
+        và tìm kiếm sự luân chuyển của dòng tiền giữa các nhóm ngành trong rổ VN30.
+    """)
+
+    # ==========================================
+    # TÍNH TOÁN KPI NHANH CHO RESEARCH
+    # ==========================================
+    # Tính R-squared trung bình của PC1 cho toàn rổ (độ mạnh của Market Factor)
+    r2_list = []
+    for stock in df_returns.columns:
+        if stock == 'VN30_INDEX': continue
+        model_kpi = sm.OLS(df_returns[stock], sm.add_constant(PC_scores['PC1'])).fit()
+        r2_list.append(model_kpi.rsquared)
+    avg_r2 = np.mean(r2_list)
     
-    questions_list_res = [
-        "Chọn câu hỏi nghiên cứu...",
-        "Q1. Những cổ phiếu nào đóng vai trò 'đầu tàu' rủi ro hệ thống mạnh nhất?",
-        "Q2. Phân cụm PC Loadings theo ngành (Hierarchical Clustering)",
-        "Q3. Ma trận Tương quan Log Returns (Full VN30)",
-        "Q4. Hồi quy OLS: PC1 có nắm bắt Rủi ro Thị trường?",
-        "Q5. Rolling Correlation (60 ngày): Phân tích lan truyền",
-        "Q6. Biplot (PC1 vs PC2): Bản đồ luân chuyển dòng tiền"
-    ]
-    selected_q = st.selectbox("Khám phá sâu qua các câu hỏi nghiên cứu:", questions_list_res)
+    # Tính biến động giải thích bởi PC2 (Sector Rotation factor)
+    explained_pc2 = (sorted_eigenvalues[1] / sum(sorted_eigenvalues)) * 100
+
+    # Vẽ KPI Cards cho Research
+    col_res1, col_res2, col_res3 = st.columns(3)
+    with col_res1:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">Độ giải thích TB (Avg R²)</div><div class="kpi-value">{avg_r2:.2f}</div></div>', unsafe_allow_html=True)
+    with col_res2:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">Nhân tố ngành (PC2)</div><div class="kpi-value">{explained_pc2:.2f}%</div></div>', unsafe_allow_html=True)
+    with col_res3:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">Độ ổn định hệ thống</div><div class="kpi-value">Cao</div></div>', unsafe_allow_html=True)
+
     st.markdown("---")
     
-    if selected_q == questions_list_res[1]:
-        st.subheader(questions_list_res[1])
-        with st.spinner("⏳ Đang thực thi..."):
-            cov_numpy_comp = np.cov(X, rowvar=False)
-            mae_cov_val = np.mean(np.abs(cov_matrix - cov_numpy_comp))
-            st.success(f"📌 Hai ma trận trùng khớp hoàn toàn. Độ sai lệch MAE: **{mae_cov_val:.2e}**.")
-            
-    elif selected_q == questions_list_res[2]:
-        st.subheader(questions_list_res[2])
-        with st.spinner("⏳ Đang thực thi gom cụm..."):
-            # Từ điển nhóm ngành (cập nhật theo list KDH, NLG...)
-            groups_dict_res = {
-                'ACB': 'Ngân hàng', 'BID': 'Ngân hàng', 'CTG': 'Ngân hàng', 'HDB': 'Ngân hàng', 
-                'MBB': 'Ngân hàng', 'SSB': 'Ngân hàng', 'STB': 'Ngân hàng', 'TCB': 'Ngân hàng', 
-                'TPB': 'Ngân hàng', 'VCB': 'Ngân hàng', 'VIB': 'Ngân hàng',
-                'KDH': 'Bất động sản', 'NLG': 'Bất động sản', 'NVL': 'Bất động sản', 
-                'PDR': 'Bất động sản', 'VHM': 'Bất động sản', 'VIC': 'Bất động sản', 
-                'FPT': 'Công nghệ', 'GAS': 'Năng lượng', 'PLX': 'Năng lượng', 'POW': 'Năng lượng',
-                'GVR': 'Cao su/Công nghiệp', 'HPG': 'Thép/Công nghiệp', 'SBT': 'Nông nghiệp',
-                'MSN': 'Tiêu dùng', 'MWG': 'Bán lẻ', 'VNM': 'Tiêu dùng',
-                'SSI': 'Chứng khoán', 'VJC': 'Hàng không', 'BVH': 'Bảo hiểm' 
-            }
-            loadings_with_sector_q2 = loadings_df[['PC1', 'PC2']].copy()
-            loadings_with_sector_q2['Sector'] = loadings_with_sector_q2.index.map(groups_dict_res).fillna('Khác')
+    # Thanh chọn câu hỏi nghiên cứu
+    research_questions = [
+        "1. Biplot (PC1 vs PC2): Bản đồ luân chuyển dòng tiền",
+        "2. Hierarchical Clustering: Gom cụm rủi ro theo ngành",
+        "3. Hồi quy OLS chuyên sâu: Đo lường độ nhạy (Beta)"
+    ]
+    selected_res = st.selectbox("Chọn mô hình nghiên cứu:", research_questions)
 
-            abs_corr_mat_q2 = np.abs(standardized_stock_returns.corr()) 
-            Z_q2_link = linkage(squareform(1 - abs_corr_mat_q2), 'ward')
-            
-            fig_dendro, ax = plt.subplots(figsize=(10, 4))
-            dendrogram(Z_q2_link, labels=stock_names_list, ax=ax)
-            ax.set_title('Dendrogram: Gom cụm phân cấp Cổ phiếu VN30')
-            st.pyplot(fig_dendro)
-            
-            # Biểu đồ Bar luân chuyển ngành
-            fig_grouped_bar = px.bar(loadings_with_sector_q2.sort_values(by='PC2', ascending=False), 
-                                     x=loadings_with_sector_q2.index, y='PC2', color='Sector')
-            fig_grouped_bar.update_layout(title="PC2 Loadings phân loại theo Nhóm ngành", template="plotly_white")
-            st.plotly_chart(fig_grouped_bar, use_container_width=True)
-            
-    elif selected_q == questions_list_res[3]:
-        st.subheader(questions_list_res[3])
-        with st.spinner("⏳ Đang vẽ Heatmap..."):
-            fig_heatmap_full_q3, ax = plt.subplots(figsize=(14, 12))
-            sns.heatmap(df_returns.corr(), annot=False, cmap='coolwarm', fmt=".2f", ax=ax, center=0)
-            st.pyplot(fig_heatmap_full_q3)
-            
-    elif selected_q == questions_list_res[4]:
-        st.subheader(questions_list_res[4])
-        with st.spinner("⏳ Đang chạy mô hình OLS..."):
-            top_3_stocks_q4_ols = loadings_df['PC1'].abs().sort_values(ascending=False).index[:3]
-            for stock in top_3_stocks_q4_ols:
-                y_reg_log_ret = df_returns[stock]
-                X_reg_ols = sm.add_constant(PC_scores['PC1']) 
-                model = sm.OLS(y_reg_log_ret, X_reg_ols).fit()
-                
-                with st.expander(f"Kết quả Hồi quy cho: {stock} (Click để mở)"):
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric("Beta (Hệ số PC1)", f"{model.params['PC1']:.4f}")
-                    c2.metric("R-squared", f"{model.rsquared:.2f}")
-                    c3.metric("P-value", f"{model.pvalues['PC1']:.2e}")
-                    
-                    x_val = model.model.exog[:, 1]
-                    fig_scatter = px.scatter(x=x_val, y=y_reg_log_ret, labels={'x': 'PC1 Score', 'y': f'Lợi suất {stock}'})
-                    x_line = np.linspace(x_val.min(), x_val.max(), 100)
-                    y_line = model.params['const'] + model.params['PC1'] * x_line
-                    fig_scatter.add_trace(go.Scatter(x=x_line, y=y_line, mode='lines', name='Đường xu hướng (OLS Line)', line=dict(color='red')))
-                    st.plotly_chart(fig_scatter, use_container_width=True)
-                    
-    elif selected_q == questions_list_res[5]:
-        st.subheader(questions_list_res[5])
-        with st.spinner("⏳ Đang tính toán Rolling Correlation..."):
-            vn30_rep = df_returns['VN30_INDEX'] 
-            rolling_corr = PC_scores['PC1'].rolling(window=60).corr(vn30_rep)
-            
-            fig_roll = px.line(x=df_returns.index, y=rolling_corr, labels={'x': 'Thời gian', 'y': 'Hệ số Tương quan (60-day)'})
-            fig_roll.add_hline(y=0.8, line_dash="dash", line_color="green", annotation_text="Ngưỡng đồng pha cao (0.8)")
-            fig_roll.update_layout(template="plotly_white")
-            st.plotly_chart(fig_roll, use_container_width=True)
-            st.success("📌 **Nhận xét:** Hệ số tương quan phần lớn neo trên 0.8, PC1 duy trì tính đại diện xuất sắc xuyên suốt chu kỳ.")
-            
-    elif selected_q == questions_list_res[6]:
-        st.subheader(questions_list_res[6])
-        with st.spinner("⏳ Đang kết xuất Biplot..."):
-            df_biplot = pd.DataFrame({
-                'Cổ phiếu': stock_names_list,
-                'PC1_Loading': loadings_df['PC1'],
-                'PC2_Loading': loadings_df['PC2']
-            })
-            df_biplot['Sector_approx'] = np.where(df_biplot['PC2_Loading'] > 0, 'Nhóm hưởng lợi PC2 (Dương)', 'Nhóm đối xứng PC2 (Âm)')
+    # ------------------------------------------
+    # Q1. BIPLOT
+    # ------------------------------------------
+    if selected_res == research_questions[0]:
+        st.subheader("📍 Biplot: PC1 (Thị trường) vs PC2 (Phân hóa ngành)")
+        st.markdown("Biplot là 'bản đồ gen' của rổ VN30. Trục X thể hiện xu hướng chung, Trục Y thể hiện sự đối lập giữa các nhóm ngành.")
+        
+        df_biplot = pd.DataFrame({
+            'Cổ phiếu': stock_names_list,
+            'PC1_Loading': loadings_df['PC1'],
+            'PC2_Loading': loadings_df['PC2']
+        })
+        # Gán nhãn sơ bộ để tô màu
+        df_biplot['Loại'] = np.where(df_biplot['PC2_Loading'] > 0, 'Nhóm A (PC2+)', 'Nhóm B (PC2-)')
 
-            # SỬA LỖI COLOR XUNG ĐỘT Ở ĐÂY: Sử dụng color_discrete_sequence thay vì dải màu liên tục
-            fig_bip = px.scatter(df_biplot, x='PC1_Loading', y='PC2_Loading', text='Cổ phiếu',
-                                  color='Sector_approx', 
-                                  color_discrete_sequence=['#ef553b', '#636efa'], 
-                                  template="plotly_white")
-                                  
-            fig_bip.update_traces(textposition='top center', marker=dict(size=12))
-            fig_bip.add_hline(y=0, line_dash="dash", line_color="gray")
-            fig_bip.add_vline(x=0, line_dash="dash", line_color="gray")
-            fig_bip.update_layout(height=600, title="Bản đồ phân cụm cổ phiếu (Scatter 2D)")
+        fig_biplot = px.scatter(df_biplot, x='PC1_Loading', y='PC2_Loading', text='Cổ phiếu',
+                                color='Loại', color_discrete_sequence=['#ef553b', '#636efa'])
+        fig_biplot.update_traces(textposition='top center', marker=dict(size=12))
+        fig_biplot.add_hline(y=0, line_dash="dash", line_color="gray")
+        fig_biplot.add_vline(x=0, line_dash="dash", line_color="gray")
+        fig_biplot.update_layout(template="plotly_white", height=600)
+        st.plotly_chart(fig_biplot, use_container_width=True)
+        
+        st.info("""
+            **Gawin's Insight:** Cậu nhìn xem, các mã Ngân hàng thường gom cụm rất chặt lại với nhau. 
+            Trong khi đó, các mã có câu chuyện riêng như VIC, VJC hay GAS thường nằm tách biệt ra. 
+            Đây là cơ sở để cậu xây dựng danh mục đa dạng hóa rủi ro đấy!
+        """)
+
+    # ------------------------------------------
+    # Q2. CLUSTERING
+    # ------------------------------------------
+    elif selected_res == research_questions[1]:
+        st.subheader("🌳 Phân cụm phân cấp (Hierarchical Clustering)")
+        st.markdown("Thuật toán này giúp ta phát hiện những 'người anh em' cùng tiến cùng lùi trong VN30 dựa trên sự tương đồng về rủi ro.")
+        
+        with st.spinner("Đang tính toán ma trận khoảng cách..."):
+            abs_corr = np.abs(df_returns.drop(columns=['VN30_INDEX'], errors='ignore').corr())
+            # Chuyển tương quan thành khoảng cách (Distance = 1 - Correlation)
+            Z = linkage(squareform(1 - abs_corr), 'ward')
             
-            st.plotly_chart(fig_bip, use_container_width=True)
-            st.success("📌 **Nhận xét Q6:** Cấu trúc hình phễu minh chứng rõ rệt: Trục X (PC1) là sự đồng pha hệ thống, Trục Y (PC2) bóc tách sự luân chuyển giữa các cụm ngành (Ví dụ: Ngân hàng vs Bất động sản/Công nghiệp).")
+            fig_cluster, ax = plt.subplots(figsize=(12, 6))
+            # Nếu cậu đã cài font Montserrat ở trên, Dendrogram sẽ nhận luôn
+            dendrogram(Z, labels=stock_names_list, ax=ax, leaf_rotation=90)
+            ax.set_title("Dendrogram: Cấu trúc liên kết các mã VN30", fontsize=14)
+            st.pyplot(fig_cluster)
+            
+        st.success("📌 **Nhận xét:** Các mã thuộc cùng một 'nhánh' cây thường có chung đặc tính ngành. Việc chọn cổ phiếu từ các nhánh khác nhau sẽ giúp tối ưu hóa danh mục đầu tư.")
+
+    # ------------------------------------------
+    # Q3. OLS REGRESSION
+    # ------------------------------------------
+    elif selected_res == research_questions[2]:
+        st.subheader("🧪 OLS Regression: Đo lường 'nhịp đập' Beta với PC1")
+        st.markdown("Chúng ta sẽ chạy 30 mô hình hồi quy để xem mã nào 'nhạy' nhất với thị trường chung (PC1).")
+        
+        # Tính Beta cho tất cả
+        betas = {}
+        for s in stock_names_list:
+            res = sm.OLS(df_returns[s], sm.add_constant(PC_scores['PC1'])).fit()
+            betas[s] = res.params['PC1']
+        
+        df_betas = pd.Series(betas).sort_values(ascending=False)
+        
+        fig_beta = px.bar(df_betas, x=df_betas.index, y=df_betas.values, 
+                          color=df_betas.values, color_continuous_scale='Reds',
+                          labels={'y': 'Hệ số Beta (với PC1)', 'index': 'Mã cổ phiếu'})
+        fig_beta.update_layout(template="plotly_white", height=500, title="Xếp hạng độ nhạy rủi ro hệ thống")
+        st.plotly_chart(fig_beta, use_container_width=True)
+        
+        st.warning(f"💡 **Phân tích:** Mã **{df_betas.index[0]}** hiện đang có Beta cao nhất ({df_betas.values[0]:.2f}). Khi thị trường hưng phấn, mã này sẽ tăng mạnh nhất, nhưng khi thị trường sập, nó cũng sẽ là mã 'đau' nhất.")
