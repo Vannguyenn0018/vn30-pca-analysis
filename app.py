@@ -167,8 +167,15 @@ with tab1:
     
     with st.expander("❓ Khám phá: Vì sao Ma trận tương quan lại quan trọng ở bước này?", expanded=True):
         st.info("""
-            Trong toán học, nếu các cổ phiếu di chuyển hoàn toàn độc lập (hệ số tương quan ~ 0), thuật toán PCA sẽ vô dụng vì không có thông tin nào để nén. 
-            Tuy nhiên, nhìn vào Heatmap trên, ta thấy các dải màu hiển thị mức độ tương quan thuận rất rõ rệt. Chính sự "ràng buộc" này là **tiền đề bắt buộc** để thuật toán PCA ở Tab 2 có thể chiết xuất thành công các Nhân tố cốt lõi (Principal Components).
+            Ma trận tương quan của lợi suất hàng ngày cho các cổ phiếu trong rổ VN30 cung cấp cái nhìn sâu sắc về mối quan hệ giữa các tài sản:
+
+*   **Tương quan dương cao:** Biểu đồ nhiệt của ma trận tương quan cho thấy phần lớn các cổ phiếu trong rổ VN30 có hệ số tương quan dương với nhau. Điều này là đặc trưng của một thị trường chứng khoán, nơi các cổ phiếu thường có xu hướng biến động cùng chiều do chịu ảnh hưởng từ các yếu tố vĩ mô và tâm lý thị trường chung (Market Risk).
+    *   Các vùng màu nóng (ví dụ, màu đỏ trong heatmap) biểu thị các cặp cổ phiếu có tương quan dương mạnh, nghĩa là chúng thường tăng/giảm cùng nhau.
+    *   Các vùng màu lạnh (ví dụ, màu xanh lam) biểu thị tương quan âm hoặc thấp, cho thấy các cặp cổ phiếu có xu hướng biến động ngược chiều hoặc độc lập hơn.
+*   **Sự hiện diện của yếu tố thị trường chung:** Mức độ tương quan dương cao giữa các cổ phiếu là bằng chứng mạnh mẽ cho thấy có một hoặc một vài yếu tố chung đang chi phối sự biến động của toàn bộ thị trường VN30. Đây chính là tiền đề quan trọng nhất để áp dụng phân tích PCA, vì PCA sẽ tìm cách trích xuất những 'yếu tố chung' này thành các Thành phần chính (Principal Components).
+*   **Tiềm năng đa dạng hóa hạn chế:** Mức độ tương quan cao cũng ngụ ý rằng khả năng đa dạng hóa rủi ro bằng cách kết hợp các cổ phiếu trong rổ VN30 có thể bị hạn chế, vì phần lớn chúng đều phản ứng tương tự với các điều kiện thị trường.
+
+Nhìn chung, cả EDA và ma trận tương quan đều xác nhận tính chất 
         """)
 # --- TAB 2: Thuật toán PCA ---
 with tab2:
@@ -201,54 +208,85 @@ with tab2:
 
 # --- TAB 3: PC1 MARKET FACTOR ---
 with tab3:
+    # --- TAB 3: YẾU TỐ THỊ TRƯỜNG (FULL WIDTH LAYOUT) ---
+with tab3:
     st.header("3. Phần Yếu tố thị trường")
+    st.markdown("""
+        Tab này tập trung vào **Thành phần chính đầu tiên (PC1)**. Trong tài chính, PC1 thường được hiểu là **Nhân tố thị trường (Market Factor)** – lực đẩy chung chi phối hầu hết các cổ phiếu.
+    """)
+
+    # --- PHẦN 1: TRỌNG SỐ PC1 (LOADINGS) ---
+    st.markdown("---")
+    st.subheader("📊 Trọng số rủi ro thị trường (PC1 Loadings)")
     
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        st.subheader("Trọng số rủi ro thị trường (PC1)")
-        loadings_pc1 = loadings_df['PC1'].sort_values(ascending=False)
-        fig_pc1_bar = px.bar(loadings_pc1, x=loadings_pc1.index, y='PC1', color='PC1', color_continuous_scale='viridis')
-        fig_pc1_bar.update_layout(template="plotly_white")
-        st.plotly_chart(fig_pc1_bar, use_container_width=True)
-        st.markdown("**Phân tích:** PC1 đại diện cho nhân tố thị trường chung. Các cổ phiếu đều có trọng số đồng chiều dương rất rõ nét.")
-            
-  # --- CỘT 2 ---
-    with col2:
-        st.subheader("Hiệu năng Scaled: PC1 Score vs VN30 Index")
-        
-        # 1. Đồng bộ hóa Index: Ép VN30 Index phải cắt bỏ ngày đầu tiên giống như PC_scores
-        valid_index = PC_scores.index
-        vn30_prices = df_final.loc[valid_index, 'VN30_INDEX']
-        
-        # Gawin's Backup: Nếu file CSV của cậu bị lỗi (như ảnh 2 cậu từng phải dùng Proxy), 
-        # ta sẽ tự động lấy trung bình cộng 30 mã làm VN30 Index giả lập (Equal-Weighted Index)
-        if vn30_prices.isnull().all():
-            st.warning("⚠️ File VN30.csv không hợp lệ hoặc rỗng. Đang sử dụng VN30 Equal-Weighted (Proxy) để thay thế.")
-            vn30_prices = df_final.drop(columns=['VN30_INDEX'], errors='ignore').loc[valid_index].mean(axis=1)
-        else:
-            # Lấp đầy các ngày NaN lắt nhắt do khác biệt lịch nghỉ lễ giữa Yahoo và CSV
-            vn30_prices = vn30_prices.ffill().bfill()
-        
-        # 2. Tính toán Scaled (Chuẩn hóa Z-score)
-        scaled_pc1_cum = (PC_scores['PC1'].cumsum() - PC_scores['PC1'].cumsum().mean()) / PC_scores['PC1'].cumsum().std()
-        scaled_vn30_price = (vn30_prices - vn30_prices.mean()) / vn30_prices.std()
-        
-        # 3. Vẽ biểu đồ Plotly
-        fig_line_comp = go.Figure()
-        fig_line_comp.add_trace(go.Scatter(x=valid_index, y=scaled_pc1_cum, mode='lines', name='PC1 Score (Tích lũy)'))
-        fig_line_comp.add_trace(go.Scatter(x=valid_index, y=scaled_vn30_price, mode='lines', name='VN30 Index'))
-        
-        fig_line_comp.update_layout(
-            template="plotly_white",
-            legend=dict(
-                orientation="h",
-                y=1.02,
-                yanchor="bottom",
-                x=0.5,
-                xanchor="center"
-            )
-        )
-        st.plotly_chart(fig_line_comp, use_container_width=True)
+    loadings_pc1 = loadings_df['PC1'].sort_values(ascending=False)
+    fig_pc1_bar = px.bar(loadings_pc1, 
+                          x=loadings_pc1.index, 
+                          y='PC1', 
+                          color='PC1', 
+                          color_continuous_scale='viridis',
+                          labels={'PC1': 'Hệ số tải (Loading)', 'index': 'Mã cổ phiếu'})
+    
+    fig_pc1_bar.update_layout(title="Mức độ nhạy cảm của từng cổ phiếu đối với PC1", 
+                              template="plotly_white",
+                              height=500) # Chiều cao vừa đủ để nhìn rõ tên 30 mã
+    st.plotly_chart(fig_pc1_bar, use_container_width=True)
+    
+    st.info("""
+        **Gawin's Insight:** Cậu để ý thấy toàn bộ các cột đều nằm trên trục 0 (đồng chiều dương) không? 
+        Điều này chứng minh PC1 phản ánh đúng **tâm lý chung của thị trường**. Khi PC1 tăng, 
+        hầu như tất cả cổ phiếu trong rổ VN30 đều được kéo lên theo.
+    """)
+
+    # --- PHẦN 2: SO SÁNH PC1 VS VN30 INDEX ---
+    st.markdown("---")
+    st.subheader("📈 Hiệu năng Scaled: PC1 Score (Tích lũy) vs VN30 Index")
+    
+    # 1. Đồng bộ hóa Index
+    valid_index = PC_scores.index
+    vn30_prices = df_final.loc[valid_index, 'VN30_INDEX']
+    
+    # Gawin's Backup cơ chế phòng vệ dữ liệu
+    if vn30_prices.isnull().all():
+        st.warning("⚠️ File VN30.csv không hợp lệ. Đang sử dụng VN30 Equal-Weighted (Proxy) để thay thế.")
+        vn30_prices = df_final.drop(columns=['VN30_INDEX'], errors='ignore').loc[valid_index].mean(axis=1)
+    else:
+        vn30_prices = vn30_prices.ffill().bfill()
+    
+    # 2. Tính toán Scaled (Chuẩn hóa Z-score để đưa về cùng thang đo)
+    scaled_pc1_cum = (PC_scores['PC1'].cumsum() - PC_scores['PC1'].cumsum().mean()) / PC_scores['PC1'].cumsum().std()
+    scaled_vn30_price = (vn30_prices - vn30_prices.mean()) / vn30_prices.std()
+    
+    # 3. Vẽ biểu đồ so sánh đường line
+    fig_line_comp = go.Figure()
+    fig_line_comp.add_trace(go.Scatter(x=valid_index, y=scaled_pc1_cum, 
+                                       mode='lines', name='PC1 Score (Đại diện PCA)',
+                                       line=dict(color='#1f77b4', width=2.5)))
+    fig_line_comp.add_trace(go.Scatter(x=valid_index, y=scaled_vn30_price, 
+                                       mode='lines', name='VN30 Index (Thực tế)',
+                                       line=dict(color='#ff7f0e', width=2, dash='dot')))
+    
+    fig_line_comp.update_layout(
+        title="So sánh xu hướng vận động: Nhân tố PCA tự xây dựng vs Chỉ số thực tế",
+        template="plotly_white",
+        height=600,
+        legend=dict(
+            orientation="h",
+            y=1.05,
+            yanchor="bottom",
+            x=0.5,
+            xanchor="center"
+        ),
+        xaxis_title="Thời gian",
+        yaxis_title="Giá trị chuẩn hóa (Z-score)"
+    )
+    st.plotly_chart(fig_line_comp, use_container_width=True)
+    
+    st.success("""
+        **Kết luận tài chính:** Sự bám sát giữa đường màu xanh (PC1) và đường màu cam (VN30 thực tế) 
+        là bằng chứng cho thấy thuật toán PCA đã "nén" thành công thông tin của 30 cổ phiếu vào 1 nhân tố duy nhất 
+        mà vẫn giữ được linh hồn của thị trường.
+    """)
 with tab4:
     st.header("4. Phần Nghiên cứu chuyên sâu")
     
