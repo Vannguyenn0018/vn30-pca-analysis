@@ -7,8 +7,6 @@ import seaborn as sns
 import plotly.express as px
 import plotly.graph_objects as go
 from sklearn.preprocessing import StandardScaler
-
-# Thư viện bổ sung đã bị thiếu
 import statsmodels.api as sm
 from scipy.cluster.hierarchy import linkage, dendrogram, fcluster
 from scipy.spatial.distance import squareform
@@ -47,11 +45,27 @@ def load_and_process_data(start_date, end_date, uploaded_file):
     vn30_index_data['Date'] = pd.to_datetime(vn30_index_data['Date'], format='%d/%m/%Y')
     vn30_index_data.set_index('Date', inplace=True)
     vn30_index_data.index = vn30_index_data.index.tz_localize(None).normalize()
-
+    
     # Gộp và xử lý Missing Values
     df_final = panel_data.join(vn30_index_data, how='outer')
-    df_final = df_final.loc[start_date:end_date].ffill().bfill()
+    df_final = df_final.loc[start_date:end_date]
+
+    # 1. Xóa bỏ mọi dấu phẩy (,) phân cách hàng nghìn bị kẹt lại
+    df_final = df_final.replace({',': ''}, regex=True)
+    # 2. Ép toàn bộ về kiểu số. Nếu có ký tự lạ (như chữ, khoảng trắng), nó sẽ biến thành NaN
+    df_final = df_final.apply(pd.to_numeric, errors='coerce')
+    # 3. Điền khuyết (Fillna) để đảm bảo không bị lỗi chia cho NaN
+    df_final = df_final.ffill().bfill()
     
+    # Tính Log Returns (Bây giờ 100% dữ liệu đã là số thực)
+    df_returns = np.log(df_final / df_final.shift(1)).dropna()
+    
+    # Chuẩn hóa dữ liệu cổ phiếu (Bỏ VN30_INDEX ra để chạy PCA)
+    scaler = StandardScaler()
+    temp_standardized = pd.DataFrame(scaler.fit_transform(df_returns), columns=df_returns.columns, index=df_returns.index)
+    standardized_stock_returns = temp_standardized.drop(columns=['VN30_INDEX'], errors='ignore')
+    
+    return df_final, df_returns, standardized_stock_returns
     # Tính Log Returns thay vì pct_change để đúng với mô tả (Log Returns)
     df_returns = np.log(df_final / df_final.shift(1)).dropna()
     
