@@ -165,7 +165,7 @@ with tab1:
                            margin=dict(l=0, r=0, t=30, b=0)) 
     st.plotly_chart(fig_corr, use_container_width=True)
     
-    with st.expander("❓ Khám phá: Vì sao Ma trận tương quan lại quan trọng ở bước này?", expanded=True):
+    with st.expander("❓ Khám phá:  Ma trận tương quan của lợi suất hàng ngày", expanded=True):
         st.info("""
             Ma trận tương quan của lợi suất hàng ngày cho các cổ phiếu trong rổ VN30 cung cấp cái nhìn sâu sắc về mối quan hệ giữa các tài sản:
 
@@ -282,9 +282,21 @@ with tab3:
     st.plotly_chart(fig_line_comp, use_container_width=True)
     
     st.success("""
-        **Kết luận tài chính:** Sự bám sát giữa đường màu xanh (PC1) và đường màu cam (VN30 thực tế) 
-        là bằng chứng cho thấy thuật toán PCA đã "nén" thành công thông tin của 30 cổ phiếu vào 1 nhân tố duy nhất 
-        mà vẫn giữ được linh hồn của thị trường.
+        **Nhận xét biểu đồ so sánh biến động PC1 với Chỉ số thị trường**
+
+Từ biểu đồ "Hiệu năng Chuẩn hóa: PC1 Score so với Chỉ số VN30" và giá trị tương quan:
+
+1.  **Mức độ tương đồng về xu hướng:** Biểu đồ cho thấy **PC1 Tích lũy (Chuẩn hóa)** và **Chỉ số VN30 (Chuẩn hóa)** có xu hướng di chuyển cùng chiều. Mặc dù không hoàn toàn trùng khớp từng điểm, nhưng các giai đoạn tăng giảm lớn của một yếu tố thường được phản ánh ở yếu tố còn lại.
+
+2.  **Độ tương quan:** Giá trị độ tương quan giữa Hiệu năng chuẩn hóa của PC1 và Chỉ số VN30 là **0.2778**. Giá trị này cho thấy:
+    *   **Tương quan dương:** PC1 và chỉ số VN30 có mối quan hệ đồng biến; khi một yếu tố tăng, yếu tố kia cũng có xu hướng tăng, và ngược lại.
+    *   **Mức độ vừa phải:** Mức tương quan 0.2778, mặc dù dương, nhưng không phải là một mức rất cao (ví dụ, 0.8-0.9). Điều này có thể được giải thích bởi:
+        *   **Chỉ số VN30 được tạo giả lập:** Do dữ liệu `^VNINDEX` không thể tải về, chúng ta đang sử dụng một chỉ số VN30 giả lập (trung bình cộng các cổ phiếu). Chỉ số này có thể không hoàn toàn phản ánh chính xác biến động của chỉ số VN30 thực tế.
+        *   **Khía cạnh của PCA:** PC1 đại diện cho nhân tố thị trường chung (market factor) **giải thích phần lớn nhất phương sai**. Tuy nhiên, nó không nhất thiết phải là bản sao hoàn hảo của một chỉ số thị trường cụ thể. Có thể có những nhân tố khác (sector factors, style factors) hoặc yếu tố nhiễu cụ thể trong chỉ số thị trường giả lập làm giảm độ tương quan tuyệt đối.
+
+3.  **Ý nghĩa của PC1 như một Market Factor:** Mặc dù độ tương quan 0.2778 không phải là cực cao, nhưng việc PC1 giải thích **33.01%** tổng phương sai (như đã thấy trong các bước phân tích trước) và có mối quan hệ dương với chỉ số thị trường vẫn củng cố vai trò của nó như một nhân tố thị trường chung quan trọng. Nó cho thấy có một lực lượng lớn đang định hình biến động của hầu hết các cổ phiếu trong rổ.
+
+**Tóm lại:** Biểu đồ xác nhận rằng PC1 là một chỉ số hữu ích để theo dõi xu hướng chung của thị trường VN30, mặc dù có thể có những khác biệt nhỏ trong biến động do bản chất của chỉ số thị trường giả lập và cách PCA trích xuất các nhân tố.
     """)
 with tab4:
     st.header("4. Phần Nghiên cứu chuyên sâu")
