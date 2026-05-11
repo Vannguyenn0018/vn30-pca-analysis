@@ -25,7 +25,7 @@ plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['axes.unicode_minus'] = False
 
 # ==========================================
-# GAWIN CSS HACK: ĐỊNH DẠNG TABS NỔI 3D
+# ĐỊNH DẠNG TABS NỔI 3D
 # ==========================================
 st.markdown("""
 <style>
@@ -126,14 +126,40 @@ st.markdown("Dự án này sử dụng phương pháp **Principal Component Anal
 
 # --- SIDEBAR ---
 
-st.sidebar.header("⚙️ Cài đặt Dữ liệu")
-uploaded_file = st.sidebar.file_uploader("1. Tải lên file VN30.csv", type=["csv"])
-start_date = st.sidebar.date_input("2. Ngày bắt đầu", pd.to_datetime('2025-05-05'))
-end_date = st.sidebar.date_input("3. Ngày kết thúc", pd.to_datetime('2026-04-29'))
+# ==========================================
+# CÀI ĐẶT DỮ LIỆU TỰ ĐỘNG (KHÔNG CẦN UPLOAD)
+# ==========================================
+# 1. Ẩn hoàn toàn Sidebar đi nếu không cần thiết
+st.markdown(
+    """
+    <style>
+        [data-testid="collapsedControl"] {
+            display: none;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-if uploaded_file is None:
-    st.warning("⚠️ Vui lòng tải lên file dữ liệu **VN30.csv** ở thanh công cụ bên trái (Sidebar) để bắt đầu phân tích.")
-    st.stop()
+# 2. Cố định khoảng thời gian nghiên cứu (giống trong hình cậu set)
+start_date = pd.to_datetime('2025-05-05')
+end_date = pd.to_datetime('2026-04-29')
+
+# 3. Đường dẫn trực tiếp đến file CSV (Đảm bảo file VN30.csv đã được up lên cùng thư mục code)
+file_path = "VN30.csv.csv" 
+
+# --- XỬ LÝ & LƯU TRỮ TRẠNG THÁI ---
+with st.spinner('Đang tải dữ liệu tự động và chạy thuật toán PCA...'):
+    try:
+        # Truyền thẳng file_path vào hàm thay vì uploaded_file
+        df_final, df_returns, standardized_stock_returns = load_and_process_data(start_date, end_date, file_path)
+    except FileNotFoundError:
+        st.error("⚠️ Không tìm thấy file 'VN30.csv'. Cậu nhớ upload file này lên cùng chỗ với file app.py nhé!")
+        st.stop()
+    except pd.errors.ParserError:
+        # Đề phòng trường hợp file CSV của cậu sử dụng dấu chấm phẩy (;) phân tách dữ liệu gây lỗi đọc file
+        st.error("⚠️ Lỗi định dạng file. Kiểm tra lại xem file VN30.csv có đang dùng dấu ';' thay vì dấu ',' mặc định không nhé.")
+        st.stop()
 
 # --- XỬ LÝ DỮ LIỆU ---
 with st.spinner('Đang tải và xử lý dữ liệu từ Yahoo Finance...'):
