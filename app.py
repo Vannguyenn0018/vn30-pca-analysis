@@ -421,7 +421,6 @@ with tab4:
     # ==========================================
     # TÍNH TOÁN KPI NHANH CHO RESEARCH
     # ==========================================
-    # Tính R-squared trung bình của PC1 cho toàn rổ (độ mạnh của Market Factor)
     r2_list = []
     for stock in df_returns.columns:
         if stock == 'VN30_INDEX': continue
@@ -429,10 +428,8 @@ with tab4:
         r2_list.append(model_kpi.rsquared)
     avg_r2 = np.mean(r2_list)
     
-    # Tính biến động giải thích bởi PC2 (Sector Rotation factor)
     explained_pc2 = (sorted_eigenvalues[1] / sum(sorted_eigenvalues)) * 100
 
-    # Vẽ KPI Cards cho Research
     col_res1, col_res2, col_res3 = st.columns(3)
     with col_res1:
         st.markdown(f'<div class="kpi-card"><div class="kpi-title">Độ giải thích TB (Avg R²)</div><div class="kpi-value">{avg_r2:.2f}</div></div>', unsafe_allow_html=True)
@@ -443,18 +440,97 @@ with tab4:
 
     st.markdown("---")
     
-    # Thanh chọn câu hỏi nghiên cứu
+    # ==========================================
+    # MENU CHỌN MÔ HÌNH NGHIÊN CỨU
+    # ==========================================
     research_questions = [
-        "1. Biplot (PC1 vs PC2): Bản đồ luân chuyển dòng tiền",
-        "2. Hierarchical Clustering: Gom cụm rủi ro theo ngành",
-        "3. Hồi quy OLS chuyên sâu: Đo lường độ nhạy (Beta)"
+        "1. Cấu trúc dẫn dắt & Hệ số tải (Factor Loadings)",
+        "2. Top 10 cổ phiếu 'đầu tàu' rủi ro hệ thống", # Bổ sung option mới
+        "3. Biplot (PC1 vs PC2): Bản đồ luân chuyển dòng tiền",
+        "4. Hierarchical Clustering: Gom cụm rủi ro theo ngành",
+        "5. Hồi quy OLS chuyên sâu: Đo lường độ nhạy (Beta)"
     ]
     selected_res = st.selectbox("Chọn mô hình nghiên cứu:", research_questions)
 
     # ------------------------------------------
-    # Q1. BIPLOT
+    # Q1. CẤU TRÚC DẪN DẮT & HỆ SỐ TẢI
     # ------------------------------------------
     if selected_res == research_questions[0]:
+        st.subheader("Cấu trúc dẫn dắt & Hệ số tải (Factor Loadings)")
+        
+        col_left, col_right = st.columns([1, 1.5])
+        
+        with col_left:
+            st.markdown("### 🧬 Phân tích Factor Loadings")
+            st.markdown("""
+            Biểu đồ bên cạnh thể hiện mức độ đóng góp của từng cổ phiếu vào **Thành phần chính số 1 (PC1)**.
+            
+            * **Trọng số dương cao:** Các cổ phiếu mang tính dẫn dắt thị trường (Market Leaders).
+            * **Tính đồng nhất:** Nếu tất cả các mã đều có trọng số cùng dấu, thị trường có tính tương quan hệ thống rất cao.
+            """)
+            
+            st.markdown("**Top 5 Mã chi phối PC1**")
+            
+            top5_pc1 = loadings_df[['PC1']].sort_values(by='PC1', ascending=False).head(5)
+            top5_pc1.columns = ['Trọng số'] 
+            top5_pc1.index.name = 'Mã'
+            
+            st.dataframe(top5_pc1.style.background_gradient(cmap='Blues'), use_container_width=True)
+            
+        with col_right:
+            loadings_pc1_sorted = loadings_df['PC1'].sort_values(ascending=True)
+            fig_factor = px.bar(
+                x=loadings_pc1_sorted.values, 
+                y=loadings_pc1_sorted.index, 
+                orientation='h',
+                labels={'x': 'Trọng số PC1', 'y': ''}
+            )
+            fig_factor.update_traces(marker_color='#5B9BD5')
+            fig_factor.update_layout(
+                title={
+                    'text': "VN30 FACTOR LOADINGS (PC1)", 
+                    'y': 0.95, 
+                    'x': 0.5, 
+                    'xanchor': 'center', 
+                    'yanchor': 'top',
+                    'font': {'size': 16, 'color': '#1f3864', 'weight': 'bold'}
+                },
+                template="plotly_white",
+                height=650, 
+                xaxis=dict(showgrid=True, gridcolor='#E2E8F0', tickformat=".2f"),
+                yaxis=dict(showgrid=False, tickfont=dict(size=11, color='#475569')),
+                margin=dict(l=0, r=0, t=60, b=0)
+            )
+            st.plotly_chart(fig_factor, use_container_width=True)
+
+    # ------------------------------------------
+    # Q2. TOP 10 CỔ PHIẾU ĐẦU TÀU RỦI RO HỆ THỐNG (MỚI)
+    # ------------------------------------------
+    elif selected_res == research_questions[1]:
+        st.subheader("🚂 Những cổ phiếu nào đóng vai trò 'đầu tàu' rủi ro hệ thống mạnh nhất?")
+        st.markdown("Bảng dưới đây trích xuất Top 10 mã chứng khoán nhạy cảm nhất với rủi ro thị trường chung (đo lường bằng độ lớn tuyệt đối của trọng số PC1).")
+        
+        # Trích xuất và sắp xếp Top 10
+        top_systemic_stocks = loadings_df[['PC1']].copy()
+        top_systemic_stocks['Độ nhạy'] = top_systemic_stocks['PC1'].abs()
+        top_systemic_stocks = top_systemic_stocks.sort_values(by='Độ nhạy', ascending=False).head(10)
+        
+        # Đổi tên cột chuẩn form
+        display_df = top_systemic_stocks[['PC1']].copy()
+        display_df.columns = ['Trọng số PC1 (Độ nhạy thị trường)']
+        display_df.index.name = 'Mã Chứng Khoán'
+        
+        # Hiển thị bảng với dải màu YlOrRd
+        st.dataframe(display_df.style.background_gradient(cmap='YlOrRd'), use_container_width=True)
+        
+        # Tự động trích xuất mã nhạy cảm nhất (Top 1)
+        top_1 = display_df.index[0]
+        st.success(f"📌 **Nhận xét:** **{top_1}** là cổ phiếu nhạy cảm nhất. Khi PC1 (nhân tố thị trường) biến động 1 đơn vị, cổ phiếu này sẽ phản ứng mạnh nhất trong rổ VN30.")
+
+    # ------------------------------------------
+    # Q3. BIPLOT
+    # ------------------------------------------
+    elif selected_res == research_questions[2]:
         st.subheader("📍 Biplot: PC1 (Thị trường) vs PC2 (Phân hóa ngành)")
         st.markdown("Biplot là 'bản đồ gen' của rổ VN30. Trục X thể hiện xu hướng chung, Trục Y thể hiện sự đối lập giữa các nhóm ngành.")
         
@@ -463,7 +539,6 @@ with tab4:
             'PC1_Loading': loadings_df['PC1'],
             'PC2_Loading': loadings_df['PC2']
         })
-        # Gán nhãn sơ bộ để tô màu
         df_biplot['Loại'] = np.where(df_biplot['PC2_Loading'] > 0, 'Nhóm A (PC2+)', 'Nhóm B (PC2-)')
 
         fig_biplot = px.scatter(df_biplot, x='PC1_Loading', y='PC2_Loading', text='Cổ phiếu',
@@ -473,41 +548,30 @@ with tab4:
         fig_biplot.add_vline(x=0, line_dash="dash", line_color="gray")
         fig_biplot.update_layout(template="plotly_white", height=600)
         st.plotly_chart(fig_biplot, use_container_width=True)
-        
-        st.info("""
-            **Gawin's Insight:** Cậu nhìn xem, các mã Ngân hàng thường gom cụm rất chặt lại với nhau. 
-            Trong khi đó, các mã có câu chuyện riêng như VIC, VJC hay GAS thường nằm tách biệt ra. 
-            Đây là cơ sở để cậu xây dựng danh mục đa dạng hóa rủi ro đấy!
-        """)
 
     # ------------------------------------------
-    # Q2. CLUSTERING
+    # Q4. CLUSTERING
     # ------------------------------------------
-    elif selected_res == research_questions[1]:
+    elif selected_res == research_questions[3]:
         st.subheader("🌳 Phân cụm phân cấp (Hierarchical Clustering)")
         st.markdown("Thuật toán này giúp ta phát hiện những 'người anh em' cùng tiến cùng lùi trong VN30 dựa trên sự tương đồng về rủi ro.")
         
         with st.spinner("Đang tính toán ma trận khoảng cách..."):
             abs_corr = np.abs(df_returns.drop(columns=['VN30_INDEX'], errors='ignore').corr())
-            # Chuyển tương quan thành khoảng cách (Distance = 1 - Correlation)
             Z = linkage(squareform(1 - abs_corr), 'ward')
             
             fig_cluster, ax = plt.subplots(figsize=(12, 6))
-            # Nếu cậu đã cài font Montserrat ở trên, Dendrogram sẽ nhận luôn
             dendrogram(Z, labels=stock_names_list, ax=ax, leaf_rotation=90)
             ax.set_title("Dendrogram: Cấu trúc liên kết các mã VN30", fontsize=14)
             st.pyplot(fig_cluster)
-            
-        st.success("📌 **Nhận xét:** Các mã thuộc cùng một 'nhánh' cây thường có chung đặc tính ngành. Việc chọn cổ phiếu từ các nhánh khác nhau sẽ giúp tối ưu hóa danh mục đầu tư.")
 
     # ------------------------------------------
-    # Q3. OLS REGRESSION
+    # Q5. OLS REGRESSION
     # ------------------------------------------
-    elif selected_res == research_questions[2]:
+    elif selected_res == research_questions[4]:
         st.subheader("🧪 OLS Regression: Đo lường 'nhịp đập' Beta với PC1")
         st.markdown("Chúng ta sẽ chạy 30 mô hình hồi quy để xem mã nào 'nhạy' nhất với thị trường chung (PC1).")
         
-        # Tính Beta cho tất cả
         betas = {}
         for s in stock_names_list:
             res = sm.OLS(df_returns[s], sm.add_constant(PC_scores['PC1'])).fit()
@@ -520,5 +584,3 @@ with tab4:
                           labels={'y': 'Hệ số Beta (với PC1)', 'index': 'Mã cổ phiếu'})
         fig_beta.update_layout(template="plotly_white", height=500, title="Xếp hạng độ nhạy rủi ro hệ thống")
         st.plotly_chart(fig_beta, use_container_width=True)
-        
-        st.warning(f"💡 **Phân tích:** Mã **{df_betas.index[0]}** hiện đang có Beta cao nhất ({df_betas.values[0]:.2f}). Khi thị trường hưng phấn, mã này sẽ tăng mạnh nhất, nhưng khi thị trường sập, nó cũng sẽ là mã 'đau' nhất.")
