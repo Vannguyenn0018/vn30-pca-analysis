@@ -183,11 +183,17 @@ with tab3:
         fig_line_comp = go.Figure()
         fig_line_comp.add_trace(go.Scatter(x=standardized_stock_returns.index, y=scaled_pc1_cum, mode='lines', name='PC1 Score'))
         fig_line_comp.add_trace(go.Scatter(x=standardized_stock_returns.index, y=scaled_vn30_price, mode='lines', name='VN30 Index'))
-        fig_line_comp.update_layout(template="plotly_white", legend=dict(orientation="h", ybottom=1.02))
-        st.plotly_chart(fig_line_comp, use_container_width=True)
-        st.markdown(f"**Tương quan:** Sự bám sát tuyệt đối này minh chứng PC1 chính là 'nhịp đập' của thị trường VN30.")
-
-# --- TAB 4: Nghiên cứu chuyên sâu ---
+       # Cấu hình chuẩn của Plotly cho Legend nằm ngang ở trên cùng
+        fig_line_comp.update_layout(
+            template="plotly_white", 
+            legend=dict(
+                orientation="h", 
+                y=1.02,             # Đẩy lên trên đồ thị một chút
+                yanchor="bottom",   # Neo phần đáy của legend vào tọa độ y
+                x=0.5,              # Đẩy ra giữa theo trục x
+                xanchor="center"    # Neo tâm của legend vào giữa
+            )
+        )
 with tab4:
     st.header("4. Phần Nghiên cứu chuyên sâu")
     
