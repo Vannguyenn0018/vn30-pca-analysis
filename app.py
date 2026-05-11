@@ -74,10 +74,18 @@ st.title("📊 Phân tích cấu trúc thị trường chứng khoán VN30 bằn
 st.markdown("Dự án này sử dụng phương pháp **Principal Component Analysis (PCA)** xây dựng từ đầu (toán học ma trận) để trích xuất các nhân tố chi phối thị trường.")
 
 # --- SIDEBAR ---
+# 1. Chèn Logo trường vào đầu Sidebar
+try:
+    # use_container_width=True giúp logo tự động co giãn vừa khít với chiều rộng của sidebar
+    st.sidebar.image("logo_hub.png", use_container_width=True)
+except FileNotFoundError:
+    # Đề phòng trường hợp cậu quên up file ảnh lên web thì app vẫn không bị sập
+    pass 
+    
 st.sidebar.header("⚙️ Cài đặt Dữ liệu")
 uploaded_file = st.sidebar.file_uploader("1. Tải lên file VN30.csv", type=["csv"])
-start_date = st.sidebar.date_input("2. Ngày bắt đầu", pd.to_datetime('2021-01-01'))
-end_date = st.sidebar.date_input("3. Ngày kết thúc", pd.to_datetime('2026-04-30'))
+start_date = st.sidebar.date_input("2. Ngày bắt đầu", pd.to_datetime('2025-05-05'))
+end_date = st.sidebar.date_input("3. Ngày kết thúc", pd.to_datetime('2026-04-29'))
 
 if uploaded_file is None:
     st.warning("⚠️ Vui lòng tải lên file dữ liệu **VN30.csv** ở thanh công cụ bên trái (Sidebar) để bắt đầu phân tích.")
