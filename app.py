@@ -168,7 +168,7 @@ if np.corrcoef(PC_scores['PC1'], vn30_returns)[0, 1] < 0:
 # ==========================================
 tab1, tab2, tab3, tab4 = st.tabs(["1. 📋 DỮ LIỆU &\n EDA", 
                                   "2. ⚙️ THUẬT TOÁN\n PCA",
-                                  "3. 🌐 YẾU TỐ\n THỊ TRƯỜNG (PC1)", 
+                                  "3. 🌐 HIỆU NĂNG TÍCH LUỸ", 
                                   "4. 🔍 CẤU TRÚC\nCHUYÊN SÂU"])
 
 # --- TAB 1: EDA NÂNG CẤP (FULL WIDTH LEOUP) ---
@@ -368,24 +368,6 @@ with tab3:
     # ==========================================
     # BIỂU ĐỒ BÊN DƯỚI (GIỮ NGUYÊN)
     # ==========================================
-    st.markdown("---")
-    st.subheader("📊 Trọng số rủi ro thị trường (PC1 Loadings)")
-    
-    loadings_pc1 = loadings_df['PC1'].sort_values(ascending=False)
-    fig_pc1_bar = px.bar(loadings_pc1, 
-                          x=loadings_pc1.index, 
-                          y='PC1', 
-                          color='PC1', 
-                          color_continuous_scale='viridis',
-                          labels={'PC1': 'Hệ số tải (Loading)', 'index': 'Mã cổ phiếu'})
-    
-    fig_pc1_bar.update_layout(title="Mức độ nhạy cảm của từng cổ phiếu đối với PC1", 
-                              template="plotly_white",
-                              height=500) 
-    st.plotly_chart(fig_pc1_bar, use_container_width=True)
-    
-    st.info("**Gawin's Insight:** Cậu để ý thấy toàn bộ các cột đều nằm trên trục 0 (đồng chiều dương) không? Điều này chứng minh PC1 phản ánh đúng **tâm lý chung của thị trường**. Khi PC1 tăng, hầu như tất cả cổ phiếu trong rổ VN30 đều được kéo lên theo.")
-
     st.markdown("---")
     st.subheader("📈 Hiệu năng Scaled: PC1 Score (Tích lũy) vs VN30 Index")
     
