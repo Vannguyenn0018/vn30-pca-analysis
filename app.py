@@ -116,50 +116,55 @@ if np.corrcoef(PC_scores['PC1'], vn30_returns)[0, 1] < 0:
 # ==========================================
 tab1, tab2, tab3, tab4 = st.tabs(["1. Tiền xử lý và EDA", "2. Thuật toán PCA", "3. Yếu tố thị trường (PC1)", "4. Cơ cấu chuyên sâu"])
 
-# --- TAB 1: EDA ---
-# --- TAB 1: EDA NÂNG CẤP ---
+# --- TAB 1: EDA NÂNG CẤP (FULL WIDTH LEOUP) ---
 with tab1:
     st.header("Khám phá dữ liệu (EDA)")
     st.markdown("Bước tiền xử lý đóng vai trò quyết định. Dữ liệu giá được chuyển sang **Log Returns** để đảm bảo tính dừng (stationarity) và phân phối chuẩn - hai giả định cực kỳ quan trọng của các mô hình định lượng tài chính.")
     
-    col_eda1, col_eda2 = st.columns([1, 1.2])
-    
-    with col_eda1:
-        st.subheader("📈 Biến động Tỷ suất sinh lợi (Volatility)")
-        # Vẽ Line chart cho VN30 Index để thấy biến động và rủi ro thị trường
-        # Backup nếu không có VN30_INDEX thì lấy mã đầu tiên
-        col_to_plot = 'VN30_INDEX' if 'VN30_INDEX' in df_returns.columns else df_returns.columns[0]
-        
-        fig_returns = px.line(df_returns, y=col_to_plot, 
-                              labels={'value': 'Log Returns', 'Date': 'Thời gian'})
-        fig_returns.update_layout(title=f"Nhịp đập rủi ro của {col_to_plot}", 
-                                  template="plotly_white", 
-                                  showlegend=False)
-        # Đổi màu line sang cam cho chuẩn vibe tài chính
-        fig_returns.update_traces(line_color='#ff7f0e', line_width=1.5)
-        st.plotly_chart(fig_returns, use_container_width=True)
-        
-        st.markdown("""
-            **Góc nhìn tài chính:** Biểu đồ thể hiện mức độ biến động (Volatility) hàng ngày. 
-            Các đợt dao động mạnh (nhọn) phản ánh những giai đoạn thị trường hấp thụ cú sốc thông tin.
-        """)
-        
-    with col_eda2:
-        st.subheader("🔗 Ma trận Tương quan (Full rổ VN30)")
-        # Đổi sang Plotly Heatmap toàn bộ 30 mã (loại bỏ VN30_Index ra khỏi ma trận)
-        corr_full = df_returns.drop(columns=['VN30_INDEX'], errors='ignore').corr()
-        
-        fig_corr = px.imshow(corr_full, 
-                             text_auto=False, # Tắt số đi để ma trận 30x30 không bị rối mắt
-                             aspect="auto", 
-                             color_continuous_scale='RdBu_r', # Đỏ: Tương quan nghịch, Xanh: Tương quan thuận
-                             labels=dict(color="Hệ số"))
-        fig_corr.update_layout(title="Bản đồ nhiệt Tương quan (Hover để xem chi tiết)", 
-                               template="plotly_white",
-                               margin=dict(l=0, r=0, t=30, b=0)) # Căn lề cho to ra
-        st.plotly_chart(fig_corr, use_container_width=True)
-        
+    # --- PHẦN 1: BẢNG TỶ SUẤT SINH LỢI ---
     st.markdown("---")
+    st.subheader("📊 Ma trận Tỷ suất sinh lợi (Log Returns)")
+    st.dataframe(df_returns.head(10).T, use_container_width=True)
+    
+    # --- PHẦN 2: BIẾN ĐỘNG TỶ SUẤT SINH LỢI ---
+    st.markdown("---")
+    st.subheader("📈 Biến động Tỷ suất sinh lợi (Volatility)")
+    
+    col_to_plot = 'VN30_INDEX' if 'VN30_INDEX' in df_returns.columns else df_returns.columns[0]
+    fig_returns = px.line(df_returns, y=col_to_plot, 
+                          labels={'value': 'Log Returns', 'Date': 'Thời gian'})
+    fig_returns.update_layout(title=f"Nhịp đập rủi ro của {col_to_plot}", 
+                              template="plotly_white", 
+                              showlegend=False)
+    # Đổi màu line sang cam cho chuẩn vibe tài chính
+    fig_returns.update_traces(line_color='#ff7f0e', line_width=1.5)
+    st.plotly_chart(fig_returns, use_container_width=True)
+    
+    st.markdown("""
+        **Góc nhìn tài chính:** Biểu đồ thể hiện mức độ biến động (Volatility) hàng ngày. 
+        Các đợt dao động mạnh (nhọn) phản ánh những giai đoạn thị trường hấp thụ cú sốc thông tin.
+    """)
+    
+    # --- PHẦN 3: MA TRẬN TƯƠNG QUAN HEATMAP ---
+    st.markdown("---")
+    st.subheader("🔗 Ma trận Tương quan (Full rổ VN30)")
+    
+    # Loại bỏ VN30_Index ra khỏi ma trận để chỉ so sánh 30 cổ phiếu
+    corr_full = df_returns.drop(columns=['VN30_INDEX'], errors='ignore').corr()
+    
+    fig_corr = px.imshow(corr_full, 
+                         text_auto=False, # Tắt số để ma trận không bị rối mắt
+                         aspect="auto", 
+                         color_continuous_scale='RdBu_r', # Đỏ: Tương quan nghịch, Xanh: Tương quan thuận
+                         labels=dict(color="Hệ số"))
+                         
+    # Cấu hình height=700 để heatmap to ra, hiển thị tên 30 mã rõ ràng không bị đè nhau
+    fig_corr.update_layout(title="Bản đồ nhiệt Tương quan (Hover để xem chi tiết)", 
+                           template="plotly_white",
+                           height=700, 
+                           margin=dict(l=0, r=0, t=30, b=0)) 
+    st.plotly_chart(fig_corr, use_container_width=True)
+    
     with st.expander("❓ Khám phá: Vì sao Ma trận tương quan lại quan trọng ở bước này?", expanded=True):
         st.info("""
             Trong toán học, nếu các cổ phiếu di chuyển hoàn toàn độc lập (hệ số tương quan ~ 0), thuật toán PCA sẽ vô dụng vì không có thông tin nào để nén. 
