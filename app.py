@@ -14,7 +14,7 @@ from scipy.spatial.distance import squareform
 # ==========================================
 # CẤU HÌNH TRANG WEB
 # ==========================================
-st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="📈")
+st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="🏛️")
 plt.rcParams['font.family'] = 'Montserrat'
 plt.rcParams['axes.unicode_minus'] = False
 
@@ -114,7 +114,7 @@ if np.corrcoef(PC_scores['PC1'], vn30_returns)[0, 1] < 0:
 # ==========================================
 # GIAO DIỆN TABS
 # ==========================================
-tab1, tab2, tab3, tab4 = st.tabs(["1. Tiền xử lý và EDA", "2. Thuật toán PCA", "3. Yếu tố thị trường (PC1)", "4. Cơ cấu chuyên sâu"])
+tab1, tab2, tab3, tab4 = st.tabs(["1. 📈 Tiền xử lý và EDA", "2. ⚙️ Thuật toán PCA", "3. 🌐 Yếu tố thị trường (PC1)", "4. 🔎 Cơ cấu chuyên sâu"])
 
 # --- TAB 1: EDA NÂNG CẤP (FULL WIDTH LEOUP) ---
 with tab1:
@@ -177,41 +177,84 @@ with tab1:
 
 Nhìn chung, cả EDA và ma trận tương quan đều xác nhận tính chất 
         """)
-# --- TAB 2: Thuật toán PCA ---
+# --- TAB 2: THUẬT TOÁN PCA (FULL WIDTH STACKING) ---
 with tab2:
     st.header("2. Phần Thuật toán PCA")
-    st.markdown("Thay vì dùng thư viện có sẵn, mô hình áp dụng **toán học ma trận** để phân rã Hiệp phương sai thành Trị riêng và Vector riêng.")
+    st.markdown("""
+        Tại đây, mô hình thực hiện phân rã dữ liệu bằng **toán học ma trận thuần túy**. Thay vì dùng các hàm 'Black-box', 
+        chúng ta đi qua từng bước từ tính toán Hiệp phương sai đến tìm kiếm các Trị riêng (Eigenvalues).
+    """)
 
-    col_pca1, col_pca2 = st.columns([1, 1.5])
-    with col_pca1:
-        st.subheader("📐 So sánh Eigenvalues")
-        numpy_eigenvals, _ = np.linalg.eigh(cov_matrix)
-        numpy_eigenvals = np.sort(numpy_eigenvals)[::-1]
-        comp_df = pd.DataFrame({
-            'PC': range(1, X.shape[1] + 1),
-            'Trị riêng (Thủ công)': sorted_eigenvalues,
-            'Trị riêng (Numpy)': numpy_eigenvals
-        })
-        st.dataframe(comp_df.head(10), use_container_width=True)
+    # --- PHẦN 1: MA TRẬN HIỆP PHƯƠNG SAI ---
+    st.markdown("---")
+    st.subheader("📐 Ma trận Hiệp phương sai (Covariance Matrix)")
+    st.markdown("Đây là ma trận đo lường mức độ biến động cùng nhau của 30 mã cổ phiếu. Các giá trị trên đường chéo chính chính là phương sai của từng mã.")
+    
+    # Hiển thị ma trận hiệp phương sai (đã tính ở phần code chính) dưới dạng DataFrame
+    cov_df = pd.DataFrame(cov_matrix, index=stock_names_list, columns=stock_names_list)
+    st.dataframe(cov_df, use_container_width=True)
+    
+    st.info("💡 **Gawin's Note:** Ma trận này chính là 'bản đồ rủi ro' của rổ VN30. Các trị riêng (Eigenvalues) sau đây sẽ được chiết xuất trực tiếp từ chính ma trận này.")
 
-    with col_pca2:
-        st.subheader("Phân tích phương sai giải thích (Scree Plot)")
-        explained_variance_ratio = (sorted_eigenvalues / sum(sorted_eigenvalues)) * 100
-        cumulative_explained_variance = np.cumsum(explained_variance_ratio)
-        
-        fig_scree = go.Figure()
-        fig_scree.add_trace(go.Bar(x=list(range(1, 11)), y=explained_variance_ratio[:10], name='Riêng lẻ (%)', marker_color='skyblue'))
-        fig_scree.add_trace(go.Scatter(x=list(range(1, 11)), y=cumulative_explained_variance[:10], mode='lines+markers', name='Tích lũy (%)', line=dict(color='orange')))
-        fig_scree.update_layout(xaxis_title="Thành phần chính (PC)", yaxis_title="Tỷ lệ (%)", template="plotly_white")
-        st.plotly_chart(fig_scree, use_container_width=True)
-        st.info(f"💡 **Insight:** Chỉ với 1 thành phần chính đầu tiên (PC1) đã giải thích được **{explained_variance_ratio[0]:.2f}%** toàn bộ biến động của rổ VN30.")
+    # --- PHẦN 2: SO SÁNH EIGENVALUES ---
+    st.markdown("---")
+    st.subheader("🔢 So sánh kết quả Trị riêng (Eigenvalues)")
+    st.markdown("Bước này nhằm kiểm chứng độ chính xác của thuật toán thủ công so với hàm chuẩn của thư viện Numpy.")
+    
+    numpy_eigenvals, _ = np.linalg.eigh(cov_matrix)
+    numpy_eigenvals = np.sort(numpy_eigenvals)[::-1]
+    
+    comp_df = pd.DataFrame({
+        'Thành phần chính': [f'PC{i+1}' for i in range(X.shape[1])],
+        'Trị riêng (Tính thủ công)': sorted_eigenvalues,
+        'Trị riêng (Numpy Reference)': numpy_eigenvals
+    })
+    
+    # Hiển thị bảng so sánh (Full width)
+    st.dataframe(comp_df, use_container_width=True)
 
-
+    # --- PHẦN 3: SCREE PLOT ---
+    st.markdown("---")
+    st.subheader("📊 Phân tích phương sai giải thích (Scree Plot)")
+    
+    explained_variance_ratio = (sorted_eigenvalues / sum(sorted_eigenvalues)) * 100
+    cumulative_explained_variance = np.cumsum(explained_variance_ratio)
+    
+    fig_scree = go.Figure()
+    # Bar chart cho phương sai riêng lẻ
+    fig_scree.add_trace(go.Bar(
+        x=[f'PC{i+1}' for i in range(10)], 
+        y=explained_variance_ratio[:10], 
+        name='Phương sai riêng lẻ (%)', 
+        marker_color='skyblue'
+    ))
+    # Line chart cho phương sai tích lũy
+    fig_scree.add_trace(go.Scatter(
+        x=[f'PC{i+1}' for i in range(10)], 
+        y=cumulative_explained_variance[:10], 
+        mode='lines+markers', 
+        name='Phương sai tích lũy (%)', 
+        line=dict(color='orange', width=3)
+    ))
+    
+    fig_scree.update_layout(
+        title="Scree Plot: 10 Thành phần chính đầu tiên",
+        xaxis_title="Thành phần chính (Principal Components)",
+        yaxis_title="Tỷ lệ phương sai giải thích (%)",
+        template="plotly_white",
+        height=550,
+        legend=dict(orientation="h", y=1.05, yanchor="bottom", x=0.5, xanchor="center")
+    )
+    st.plotly_chart(fig_scree, use_container_width=True)
+    
+    st.success(f"""
+        **Nhận định chuyên sâu:** Thành phần chính đầu tiên (PC1) giải thích được tới **{explained_variance_ratio[0]:.2f}%** biến động của toàn bộ thị trường. Điều này xác nhận cấu trúc thị trường VN30 có tính tập trung cực cao vào một nhân tố chung.
+    """)
     # --- TAB 3: YẾU TỐ THỊ TRƯỜNG (FULL WIDTH LAYOUT) ---
 with tab3:
     st.header("3. Phần Yếu tố thị trường")
     st.markdown("""
-        Tab này tập trung vào **Thành phần chính đầu tiên (PC1)**. Trong tài chính, PC1 thường được hiểu là **Nhân tố thị trường (Market Factor)** – lực đẩy chung chi phối hầu hết các cổ phiếu.
+    rong tài chính, PC1 thường được hiểu là **Nhân tố thị trường (Market Factor)** – lực đẩy chung chi phối hầu hết các cổ phiếu.
     """)
 
     # --- PHẦN 1: TRỌNG SỐ PC1 (LOADINGS) ---
@@ -232,8 +275,7 @@ with tab3:
     st.plotly_chart(fig_pc1_bar, use_container_width=True)
     
     st.info("""
-        **Gawin's Insight:** Cậu để ý thấy toàn bộ các cột đều nằm trên trục 0 (đồng chiều dương) không? 
-        Điều này chứng minh PC1 phản ánh đúng **tâm lý chung của thị trường**. Khi PC1 tăng, 
+        **Insight:** PC1 phản ánh đúng **tâm lý chung của thị trường**. Khi PC1 tăng, 
         hầu như tất cả cổ phiếu trong rổ VN30 đều được kéo lên theo.
     """)
 
@@ -298,8 +340,9 @@ Từ biểu đồ "Hiệu năng Chuẩn hóa: PC1 Score so với Chỉ số VN30
 
 **Tóm lại:** Biểu đồ xác nhận rằng PC1 là một chỉ số hữu ích để theo dõi xu hướng chung của thị trường VN30, mặc dù có thể có những khác biệt nhỏ trong biến động do bản chất của chỉ số thị trường giả lập và cách PCA trích xuất các nhân tố.
     """)
+    
 with tab4:
-    st.header("4. Phần Nghiên cứu chuyên sâu")
+    st.header("4. Nghiên cứu chuyên sâu")
     
     questions_list_res = [
         "Chọn câu hỏi nghiên cứu...",
