@@ -166,7 +166,10 @@ if np.corrcoef(PC_scores['PC1'], vn30_returns)[0, 1] < 0:
 # ==========================================
 # GIAO DIỆN TABS
 # ==========================================
-tab1, tab2, tab3, tab4 = st.tabs(["1. 📈 Tiền xử lý và EDA", "2. ⚙️ Thuật toán PCA", "3. 🌐 Yếu tố thị trường (PC1)", "4. 🔎 Cơ cấu chuyên sâu"])
+tab1, tab2, tab3, tab4 = st.tabs(["1. 📋 DỮ LIỆU &\n EDA", 
+                                  "2. ⚙️ THUẬT TOÁN\n PCA",
+                                  "3. 🌐 YẾU TỐ\n THỊ TRƯỜNG (PC1)", 
+                                  "4. 🔍 CẤU TRÚC\nCHUYÊN SÂU"])
 
 # --- TAB 1: EDA NÂNG CẤP (FULL WIDTH LEOUP) ---
 with tab1:
@@ -306,7 +309,7 @@ with tab2:
 with tab3:
     st.header("3. Phần Yếu tố thị trường")
     st.markdown("""
-    rong tài chính, PC1 thường được hiểu là **Nhân tố thị trường (Market Factor)** – lực đẩy chung chi phối hầu hết các cổ phiếu.
+    Trong tài chính, PC1 thường được hiểu là **Nhân tố thị trường (Market Factor)** – lực đẩy chung chi phối hầu hết các cổ phiếu.
     """)
 
     # --- PHẦN 1: TRỌNG SỐ PC1 (LOADINGS) ---
