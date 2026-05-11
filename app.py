@@ -163,7 +163,7 @@ with st.spinner('Đang tải dữ liệu tự động và chạy thuật toán P
 
 # --- XỬ LÝ DỮ LIỆU ---
 with st.spinner('Đang tải và xử lý dữ liệu từ Yahoo Finance...'):
-    df_final, df_returns, standardized_stock_returns = load_and_process_data(start_date, end_date, uploaded_file)
+    df_final, df_returns, standardized_stock_returns = load_and_process_data(start_date, end_date, file_path)
 
 # --- CHẠY THUẬT TOÁN PCA THỦ CÔNG ---
 X = standardized_stock_returns.values
