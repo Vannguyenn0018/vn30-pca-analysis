@@ -414,7 +414,7 @@ with tab3:
 with tab4:
     st.header("4. Nghiên cứu chuyên sâu & Phân lớp rủi ro")
     st.markdown("""
-        Chào mừng cậu đến với phần phân tích nâng cao. Tại đây, chúng ta sẽ sử dụng PCA để bóc tách các lớp rủi ro 
+        Chào mừng đến với phần phân tích nâng cao. Tại đây, tôi đã sử dụng PCA để bóc tách các lớp rủi ro 
         và tìm kiếm sự luân chuyển của dòng tiền giữa các nhóm ngành trong rổ VN30.
     """)
 
