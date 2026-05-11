@@ -174,32 +174,49 @@ with tab3:
         st.plotly_chart(fig_pc1_bar, use_container_width=True)
         st.markdown("**Phân tích:** PC1 đại diện cho nhân tố thị trường chung. Các cổ phiếu đều có trọng số đồng chiều dương rất rõ nét.")
             
+  # --- CỘT 2 ---
     with col2:
         st.subheader("Hiệu năng Scaled: PC1 Score vs VN30 Index")
-        vn30_prices = df_final['VN30_INDEX']
+        
+        # 1. Đồng bộ hóa Index: Ép VN30 Index phải cắt bỏ ngày đầu tiên giống như PC_scores
+        valid_index = PC_scores.index
+        vn30_prices = df_final.loc[valid_index, 'VN30_INDEX']
+        
+        # Gawin's Backup: Nếu file CSV của cậu bị lỗi (như ảnh 2 cậu từng phải dùng Proxy), 
+        # ta sẽ tự động lấy trung bình cộng 30 mã làm VN30 Index giả lập (Equal-Weighted Index)
+        if vn30_prices.isnull().all():
+            st.warning("⚠️ File VN30.csv không hợp lệ hoặc rỗng. Đang sử dụng VN30 Equal-Weighted (Proxy) để thay thế.")
+            vn30_prices = df_final.drop(columns=['VN30_INDEX'], errors='ignore').loc[valid_index].mean(axis=1)
+        else:
+            # Lấp đầy các ngày NaN lắt nhắt do khác biệt lịch nghỉ lễ giữa Yahoo và CSV
+            vn30_prices = vn30_prices.ffill().bfill()
+        
+        # 2. Tính toán Scaled (Chuẩn hóa Z-score)
         scaled_pc1_cum = (PC_scores['PC1'].cumsum() - PC_scores['PC1'].cumsum().mean()) / PC_scores['PC1'].cumsum().std()
         scaled_vn30_price = (vn30_prices - vn30_prices.mean()) / vn30_prices.std()
         
+        # 3. Vẽ biểu đồ Plotly
         fig_line_comp = go.Figure()
-        fig_line_comp.add_trace(go.Scatter(x=standardized_stock_returns.index, y=scaled_pc1_cum, mode='lines', name='PC1 Score'))
-        fig_line_comp.add_trace(go.Scatter(x=standardized_stock_returns.index, y=scaled_vn30_price, mode='lines', name='VN30 Index'))
-       # Cấu hình chuẩn của Plotly cho Legend nằm ngang ở trên cùng
+        fig_line_comp.add_trace(go.Scatter(x=valid_index, y=scaled_pc1_cum, mode='lines', name='PC1 Score (Tích lũy)'))
+        fig_line_comp.add_trace(go.Scatter(x=valid_index, y=scaled_vn30_price, mode='lines', name='VN30 Index'))
+        
         fig_line_comp.update_layout(
-            template="plotly_white", 
+            template="plotly_white",
             legend=dict(
-                orientation="h", 
-                y=1.02,             # Đẩy lên trên đồ thị một chút
-                yanchor="bottom",   # Neo phần đáy của legend vào tọa độ y
-                x=0.5,              # Đẩy ra giữa theo trục x
-                xanchor="center"    # Neo tâm của legend vào giữa
+                orientation="h",
+                y=1.02,
+                yanchor="bottom",
+                x=0.5,
+                xanchor="center"
             )
         )
+        st.plotly_chart(fig_line_comp, use_container_width=True)
 with tab4:
     st.header("4. Phần Nghiên cứu chuyên sâu")
     
     questions_list_res = [
         "Chọn câu hỏi nghiên cứu...",
-        "Q1. So sánh Ma trận hiệp phương sai Thủ công vs Numpy",
+        "Q1. Những cổ phiếu nào đóng vai trò 'đầu tàu' rủi ro hệ thống mạnh nhất?",
         "Q2. Phân cụm PC Loadings theo ngành (Hierarchical Clustering)",
         "Q3. Ma trận Tương quan Log Returns (Full VN30)",
         "Q4. Hồi quy OLS: PC1 có nắm bắt Rủi ro Thị trường?",
