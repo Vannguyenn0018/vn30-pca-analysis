@@ -15,11 +15,11 @@ from scipy.spatial.distance import squareform
 # CẤU HÌNH TRANG WEB
 # ==========================================
 st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="📈")
-plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.family'] = 'Montserrat'
 plt.rcParams['axes.unicode_minus'] = False
 
 # ==========================================
-# HÀM XỬ LÝ DỮ LIỆU
+# HÀM XỬ LÝ DỮ LIỆU 
 # ==========================================
 @st.cache_data
 def load_and_process_data(start_date, end_date, uploaded_file):
