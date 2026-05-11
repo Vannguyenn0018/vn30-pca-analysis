@@ -17,7 +17,58 @@ from scipy.spatial.distance import squareform
 st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="🏛️")
 plt.rcParams['font.family'] = 'Montserrat'
 plt.rcParams['axes.unicode_minus'] = False
+# ==========================================
+# CẤU HÌNH TRANG WEB
+# ==========================================
+st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="📈")
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['axes.unicode_minus'] = False
 
+# ==========================================
+# GAWIN CSS HACK: ĐỊNH DẠNG TABS NỔI 3D
+# ==========================================
+st.markdown("""
+<style>
+    /* Chỉnh khoảng cách giữa các tabs */
+    div[data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+
+    /* Trạng thái mặc định của các Tab (chưa chọn) */
+    div[data-baseweb="tab-list"] button[role="tab"] {
+        background-color: #E2E8F0; /* Màu nền xám nhạt như hình */
+        border-radius: 6px 6px 0px 0px; /* Bo góc phía trên */
+        padding: 10px 24px;
+        border: none;
+        color: #64748B; /* Màu chữ xám xanh */
+        font-weight: 600;
+        transition: all 0.3s ease; /* Hiệu ứng chuyển màu mượt mà */
+    }
+
+    /* Xóa viền focus mặc định xấu xí của Streamlit */
+    div[data-baseweb="tab-list"] button[role="tab"]:focus {
+        outline: none;
+    }
+
+    /* Trạng thái Tab ĐƯỢC CHỌN (Active) */
+    div[data-baseweb="tab-list"] button[role="tab"][aria-selected="true"] {
+        background-color: #FFFFFF !important; /* Đổi sang nền trắng */
+        color: #1E3A8A !important; /* Đổi màu chữ đậm hơn */
+        /* Tạo viền đỏ/xanh ở dưới đáy giống thiết kế của cậu */
+        box-shadow: inset 0px -3px 0px 0px #EF4444; 
+        border-bottom: 2px solid #2563EB; 
+    }
+
+    /* Chỉnh lại font chữ và căn giữa cho nội dung tab */
+    div[data-baseweb="tab-list"] button[role="tab"] p {
+        font-size: 15px;
+        margin: 0;
+        text-align: center;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ... (Phần hàm xử lý dữ liệu và cấu hình sidebar giữ nguyên) ...
 # ==========================================
 # HÀM XỬ LÝ DỮ LIỆU 
 # ==========================================
@@ -74,14 +125,7 @@ st.title("📊 Phân tích cấu trúc thị trường chứng khoán VN30 bằn
 st.markdown("Dự án này sử dụng phương pháp **Principal Component Analysis (PCA)** xây dựng từ đầu (toán học ma trận) để trích xuất các nhân tố chi phối thị trường.")
 
 # --- SIDEBAR ---
-# 1. Chèn Logo trường vào đầu Sidebar
-try:
-    # use_container_width=True giúp logo tự động co giãn vừa khít với chiều rộng của sidebar
-    st.sidebar.image("logo_hub.png", use_container_width=True)
-except FileNotFoundError:
-    # Đề phòng trường hợp cậu quên up file ảnh lên web thì app vẫn không bị sập
-    pass 
-    
+
 st.sidebar.header("⚙️ Cài đặt Dữ liệu")
 uploaded_file = st.sidebar.file_uploader("1. Tải lên file VN30.csv", type=["csv"])
 start_date = st.sidebar.date_input("2. Ngày bắt đầu", pd.to_datetime('2025-05-05'))
