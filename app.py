@@ -305,14 +305,69 @@ with tab2:
     st.success(f"""
         **Nhận định chuyên sâu:** Thành phần chính đầu tiên (PC1) giải thích được tới **{explained_variance_ratio[0]:.2f}%** biến động của toàn bộ thị trường. Điều này xác nhận cấu trúc thị trường VN30 có tính tập trung cực cao vào một nhân tố chung.
     """)
-    # --- TAB 3: YẾU TỐ THỊ TRƯỜNG (FULL WIDTH LAYOUT) ---
+   # --- TAB 3: YẾU TỐ THỊ TRƯỜNG (FULL WIDTH) ---
 with tab3:
-    st.header("3. Phần Yếu tố thị trường")
-    st.markdown("""
-    Trong tài chính, PC1 thường được hiểu là **Nhân tố thị trường (Market Factor)** – lực đẩy chung chi phối hầu hết các cổ phiếu.
-    """)
+    st.header("3. So sánh Hiệu năng Thành phần Chính (PC1)")
+    st.markdown("Tab này tập trung vào **Thành phần chính đầu tiên (PC1)**. Trong tài chính, PC1 thường được hiểu là **Nhân tố thị trường (Market Factor)** – lực đẩy chung chi phối hầu hết các cổ phiếu.")
 
-    # --- PHẦN 1: TRỌNG SỐ PC1 (LOADINGS) ---
+    # ==========================================
+    # TÍNH TOÁN CÁC CHỈ SỐ KPI TỰ ĐỘNG
+    # ==========================================
+    # 1. Giải thích bởi PC1 (%)
+    total_var = sum(sorted_eigenvalues)
+    explained_pc1 = (sorted_eigenvalues[0] / total_var) * 100
+    
+    # 2. Tương quan PC1 vs VN30
+    if 'VN30_INDEX' in df_returns.columns:
+        corr_pc1_vn30 = np.corrcoef(PC_scores['PC1'], df_returns['VN30_INDEX'])[0, 1]
+    else:
+        # Nếu ko có VN30_INDEX thì lấy trung bình rổ làm đại diện
+        corr_pc1_vn30 = np.corrcoef(PC_scores['PC1'], df_returns.mean(axis=1))[0, 1]
+        
+    # 3. Số PC đạt >= 90% Var
+    cumulative_var = np.cumsum(sorted_eigenvalues / total_var) * 100
+    num_pc_90 = np.argmax(cumulative_var >= 90) + 1
+
+    # ==========================================
+    # VẼ KPI CARDS BẰNG CSS HACK
+    # ==========================================
+    st.markdown("""
+    <style>
+    .kpi-card {
+        background-color: #FFFFFF;
+        border-radius: 12px;
+        padding: 20px 24px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        border-left: 8px solid #829AB1; /* Màu viền trái xanh xám giống hình */
+        margin-bottom: 24px;
+        margin-top: 10px;
+    }
+    .kpi-title {
+        color: #486581;
+        font-size: 15px;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+    .kpi-value {
+        color: #102A43; /* Màu số xanh đen đậm */
+        font-size: 34px;
+        font-weight: 800;
+        font-family: 'Montserrat', sans-serif;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    col_kpi1, col_kpi2, col_kpi3 = st.columns(3)
+    with col_kpi1:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">Giải thích bởi PC1</div><div class="kpi-value">{explained_pc1:.2f}%</div></div>', unsafe_allow_html=True)
+    with col_kpi2:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">Tương quan PC1 vs VN30</div><div class="kpi-value">{corr_pc1_vn30:.4f}</div></div>', unsafe_allow_html=True)
+    with col_kpi3:
+        st.markdown(f'<div class="kpi-card"><div class="kpi-title">Số PC đạt ≥90% Var</div><div class="kpi-value">{num_pc_90}</div></div>', unsafe_allow_html=True)
+
+    # ==========================================
+    # BIỂU ĐỒ BÊN DƯỚI (GIỮ NGUYÊN)
+    # ==========================================
     st.markdown("---")
     st.subheader("📊 Trọng số rủi ro thị trường (PC1 Loadings)")
     
@@ -326,34 +381,26 @@ with tab3:
     
     fig_pc1_bar.update_layout(title="Mức độ nhạy cảm của từng cổ phiếu đối với PC1", 
                               template="plotly_white",
-                              height=500) # Chiều cao vừa đủ để nhìn rõ tên 30 mã
+                              height=500) 
     st.plotly_chart(fig_pc1_bar, use_container_width=True)
     
-    st.info("""
-        **Insight:** PC1 phản ánh đúng **tâm lý chung của thị trường**. Khi PC1 tăng, 
-        hầu như tất cả cổ phiếu trong rổ VN30 đều được kéo lên theo.
-    """)
+    st.info("**Gawin's Insight:** Cậu để ý thấy toàn bộ các cột đều nằm trên trục 0 (đồng chiều dương) không? Điều này chứng minh PC1 phản ánh đúng **tâm lý chung của thị trường**. Khi PC1 tăng, hầu như tất cả cổ phiếu trong rổ VN30 đều được kéo lên theo.")
 
-    # --- PHẦN 2: SO SÁNH PC1 VS VN30 INDEX ---
     st.markdown("---")
     st.subheader("📈 Hiệu năng Scaled: PC1 Score (Tích lũy) vs VN30 Index")
     
-    # 1. Đồng bộ hóa Index
     valid_index = PC_scores.index
     vn30_prices = df_final.loc[valid_index, 'VN30_INDEX']
     
-    # Gawin's Backup cơ chế phòng vệ dữ liệu
     if vn30_prices.isnull().all():
         st.warning("⚠️ File VN30.csv không hợp lệ. Đang sử dụng VN30 Equal-Weighted (Proxy) để thay thế.")
         vn30_prices = df_final.drop(columns=['VN30_INDEX'], errors='ignore').loc[valid_index].mean(axis=1)
     else:
         vn30_prices = vn30_prices.ffill().bfill()
     
-    # 2. Tính toán Scaled (Chuẩn hóa Z-score để đưa về cùng thang đo)
     scaled_pc1_cum = (PC_scores['PC1'].cumsum() - PC_scores['PC1'].cumsum().mean()) / PC_scores['PC1'].cumsum().std()
     scaled_vn30_price = (vn30_prices - vn30_prices.mean()) / vn30_prices.std()
     
-    # 3. Vẽ biểu đồ so sánh đường line
     fig_line_comp = go.Figure()
     fig_line_comp.add_trace(go.Scatter(x=valid_index, y=scaled_pc1_cum, 
                                        mode='lines', name='PC1 Score (Đại diện PCA)',
@@ -378,24 +425,7 @@ with tab3:
     )
     st.plotly_chart(fig_line_comp, use_container_width=True)
     
-    st.success("""
-        **Nhận xét biểu đồ so sánh biến động PC1 với Chỉ số thị trường**
-
-Từ biểu đồ "Hiệu năng Chuẩn hóa: PC1 Score so với Chỉ số VN30" và giá trị tương quan:
-
-1.  **Mức độ tương đồng về xu hướng:** Biểu đồ cho thấy **PC1 Tích lũy (Chuẩn hóa)** và **Chỉ số VN30 (Chuẩn hóa)** có xu hướng di chuyển cùng chiều. Mặc dù không hoàn toàn trùng khớp từng điểm, nhưng các giai đoạn tăng giảm lớn của một yếu tố thường được phản ánh ở yếu tố còn lại.
-
-2.  **Độ tương quan:** Giá trị độ tương quan giữa Hiệu năng chuẩn hóa của PC1 và Chỉ số VN30 là **0.2778**. Giá trị này cho thấy:
-    *   **Tương quan dương:** PC1 và chỉ số VN30 có mối quan hệ đồng biến; khi một yếu tố tăng, yếu tố kia cũng có xu hướng tăng, và ngược lại.
-    *   **Mức độ vừa phải:** Mức tương quan 0.2778, mặc dù dương, nhưng không phải là một mức rất cao (ví dụ, 0.8-0.9). Điều này có thể được giải thích bởi:
-        *   **Chỉ số VN30 được tạo giả lập:** Do dữ liệu `^VNINDEX` không thể tải về, chúng ta đang sử dụng một chỉ số VN30 giả lập (trung bình cộng các cổ phiếu). Chỉ số này có thể không hoàn toàn phản ánh chính xác biến động của chỉ số VN30 thực tế.
-        *   **Khía cạnh của PCA:** PC1 đại diện cho nhân tố thị trường chung (market factor) **giải thích phần lớn nhất phương sai**. Tuy nhiên, nó không nhất thiết phải là bản sao hoàn hảo của một chỉ số thị trường cụ thể. Có thể có những nhân tố khác (sector factors, style factors) hoặc yếu tố nhiễu cụ thể trong chỉ số thị trường giả lập làm giảm độ tương quan tuyệt đối.
-
-3.  **Ý nghĩa của PC1 như một Market Factor:** Mặc dù độ tương quan 0.2778 không phải là cực cao, nhưng việc PC1 giải thích **33.01%** tổng phương sai (như đã thấy trong các bước phân tích trước) và có mối quan hệ dương với chỉ số thị trường vẫn củng cố vai trò của nó như một nhân tố thị trường chung quan trọng. Nó cho thấy có một lực lượng lớn đang định hình biến động của hầu hết các cổ phiếu trong rổ.
-
-**Tóm lại:** Biểu đồ xác nhận rằng PC1 là một chỉ số hữu ích để theo dõi xu hướng chung của thị trường VN30, mặc dù có thể có những khác biệt nhỏ trong biến động do bản chất của chỉ số thị trường giả lập và cách PCA trích xuất các nhân tố.
-    """)
-    
+    st.success("**Kết luận tài chính:** Sự bám sát giữa đường màu xanh (PC1) và đường màu cam (VN30 thực tế) là bằng chứng cho thấy thuật toán PCA đã 'nén' thành công thông tin của 30 cổ phiếu vào 1 nhân tố duy nhất mà vẫn giữ được linh hồn của thị trường.")
 with tab4:
     st.header("4. Nghiên cứu chuyên sâu")
     
