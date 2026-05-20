@@ -17,7 +17,7 @@ Bạn có thể xem báo cáo phân tích chi tiết tại:
 4. **Insight Extraction:** - Phân tích tương quan giữa PC1 và VN30-Index.
    - Biplot visualization để phân cụm ngành.
    - Rolling Correlation để bắt trọn các cú sốc thị trường ngắn hạn.
-   - 
+     
 ## 📊 Kết quả đạt được
 * **Market Factor (PC1):** Giải thích gần **39.39%** tổng phương sai. Hệ số tương quan lên đến **0.93** với chỉ số VN30-Index, khẳng định PC1 là "nhịp đập" của thị trường.
 * **Sector Leadership:** Xác định rõ sự dẫn dắt của nhóm Ngân hàng (TPB, ACB, TCB) đối với xu hướng chung.
@@ -37,6 +37,7 @@ Bạn có thể xem báo cáo phân tích chi tiết tại:
 ├── app.py              # Code triển khai Streamlit
 ├── requirements.txt    # Danh sách thư viện cần thiết
 └── README.md           # Hướng dẫn dự án
+```
 
 ## 📈 **Kết luận từ dự án**
 - Mô hình PCA không chỉ giúp giảm chiều dữ liệu hiệu quả mà còn cung cấp bộ lọc sắc bén để nhà đầu tư phân lớp danh mục:
@@ -44,3 +45,7 @@ Bạn có thể xem báo cáo phân tích chi tiết tại:
 - Nhóm Ngân hàng có tính đồng pha nội bộ cao (dòng tiền bầy đàn).
 
 - Các cổ phiếu trụ cột (VIC, GAS, VJC) thể hiện đặc tính phòng thủ và độc lập hơn so với diễn biến chung.
+
+
+### **🧑‍💻 Nguyễn Thái Thanh Vân**
+Email: vanthanhh8100@gmail.com
