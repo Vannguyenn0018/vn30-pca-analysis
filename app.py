@@ -268,7 +268,7 @@ with tab2:
     cov_df = pd.DataFrame(cov_matrix, index=stock_names_list, columns=stock_names_list)
     st.dataframe(cov_df, use_container_width=True)
     
-    st.info("💡 **Gawin's Note:** Ma trận này chính là 'bản đồ rủi ro' của rổ VN30. Các trị riêng (Eigenvalues) sau đây sẽ được chiết xuất trực tiếp từ chính ma trận này.")
+    st.info("💡 Ma trận này chính là 'bản đồ rủi ro' của rổ VN30. Các trị riêng (Eigenvalues) sau đây sẽ được chiết xuất trực tiếp từ chính ma trận này.")
 
     # --- PHẦN 2: SO SÁNH EIGENVALUES ---
     st.markdown("---")
@@ -433,8 +433,7 @@ with tab3:
 with tab4:
     st.header("4. Nghiên cứu chuyên sâu & Phân lớp rủi ro")
     st.markdown("""
-        Chào mừng đến với phần phân tích nâng cao. Tại đây, tôi đã sử dụng PCA để bóc tách các lớp rủi ro 
-        và tìm kiếm sự luân chuyển của dòng tiền giữa các nhóm ngành trong rổ VN30.
+       Tôi đã sử dụng PCA để bóc tách các lớp rủi ro và tìm kiếm sự luân chuyển của dòng tiền giữa các nhóm ngành trong rổ VN30.
     """)
 
     # ==========================================
