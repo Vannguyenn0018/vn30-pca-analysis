@@ -18,13 +18,6 @@ st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="�
 plt.rcParams['font.family'] = 'Montserrat'
 plt.rcParams['axes.unicode_minus'] = False
 # ==========================================
-# CẤU HÌNH TRANG WEB
-# ==========================================
-st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="📈")
-plt.rcParams['font.family'] = 'sans-serif'
-plt.rcParams['axes.unicode_minus'] = False
-
-# ==========================================
 # ĐỊNH DẠNG TABS NỔI 3D
 # ==========================================
 st.markdown("""
@@ -90,7 +83,7 @@ def load_and_process_data(start_date, end_date, uploaded_file):
     panel_data.index = pd.to_datetime(panel_data.index).tz_localize(None).normalize()
 
     # Xử lý file CSV VN30_INDEX
-    vn30_index_data = pd.read_csv(VN30.csv.csv)
+    vn30_index_data = pd.read_csv(uploaded_file)
     vn30_index_data = vn30_index_data[['Ngày', 'Lần cuối']]
     vn30_index_data.columns = ['Date', 'VN30_INDEX']
     if vn30_index_data['VN30_INDEX'].dtype == 'O':
