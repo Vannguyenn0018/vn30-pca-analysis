@@ -327,12 +327,12 @@ with tab2:
     
     st.success(f"""
         **Nhận định chuyên sâu:** 
-        **PC1 chiếm tỷ trọng lớn (37.47%):** Cho thấy VN30 chịu ảnh hưởng mạnh từ nhân tố thị trường chung (Market Factor), phản ánh mức độ biến động đồng pha cao giữa các cổ phiếu.
-* **Xuất hiện “điểm gãy” (Elbow) rõ rệt:** Tỷ lệ phương sai giải thích giảm mạnh từ PC1 sang PC2 và gần như đi ngang ở các PC sau, cho thấy phần lớn thông tin tập trung ở những thành phần đầu tiên.
+        * **PC1 chiếm tỷ trọng lớn (37.47%):** Cho thấy VN30 chịu ảnh hưởng mạnh từ nhân tố thị trường chung (Market Factor), phản ánh mức độ biến động đồng pha cao giữa các cổ phiếu.
+        * **Xuất hiện “điểm gãy” (Elbow) rõ rệt:** Tỷ lệ phương sai giải thích giảm mạnh từ PC1 sang PC2 và gần như đi ngang ở các PC sau, cho thấy phần lớn thông tin tập trung ở những thành phần đầu tiên.
 
-* **Hiệu quả giảm chiều cao:** Chỉ với 2 PC đầu tiên đã giải thích gần 47% biến động; mở rộng đến 5 PC có thể bao quát hơn 60% thông tin của toàn bộ rổ VN30.
+        * **Hiệu quả giảm chiều cao:** Chỉ với 2 PC đầu tiên đã giải thích gần 47% biến động; mở rộng đến 5 PC có thể bao quát hơn 60% thông tin của toàn bộ rổ VN30.
 
-* **Kết luận:** PCA hoạt động hiệu quả trong việc giảm chiều dữ liệu, cho phép rút gọn từ 30 biến cổ phiếu xuống còn khoảng 2–5 thành phần chính mà vẫn giữ được các đặc trưng biến động cốt lõi của thị trường.
+        * **Kết luận:** PCA hoạt động hiệu quả trong việc giảm chiều dữ liệu, cho phép rút gọn từ 30 biến cổ phiếu xuống còn khoảng 2–5 thành phần chính mà vẫn giữ được các đặc trưng biến động cốt lõi của thị trường.
    """)
    # --- TAB 3: YẾU TỐ THỊ TRƯỜNG (FULL WIDTH) ---
 with tab3:
