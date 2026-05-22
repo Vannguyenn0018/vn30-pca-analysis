@@ -215,8 +215,13 @@ with tab1:
     st.plotly_chart(fig_returns, use_container_width=True)
     
     st.markdown("""
-        **Góc nhìn tài chính:** Biểu đồ thể hiện mức độ biến động (Volatility) hàng ngày. 
-        Các đợt dao động mạnh (nhọn) phản ánh những giai đoạn thị trường hấp thụ cú sốc thông tin.
+        **Góc nhìn tài chính:** Đồ thị lợi suất hàng ngày của VN30_INDEX cho thấy chuỗi dữ liệu dao động quanh mức trung bình gần bằng 0, phản ánh tính dừng (stationarity) của chuỗi lợi suất. Đây là điều kiện phù hợp để áp dụng các phương pháp phân tích định lượng như PCA hay các mô hình học máy, đồng thời hạn chế hiện tượng tương quan ảo.
+
+Biểu đồ cũng thể hiện rõ hiện tượng Volatility Clustering – các giai đoạn biến động mạnh thường xuất hiện liên tiếp nhau, xen kẽ với các giai đoạn thị trường ổn định. Đặc biệt quanh tháng 10/2025 và tháng 3/2026 xuất hiện nhiều phiên giảm sâu trên 4–6%, cho thấy thị trường chịu các cú sốc lớn và tâm lý biến động mạnh.
+
+Ngoài ra, phần lớn lợi suất dao động trong khoảng ±2%, nhưng vẫn xuất hiện các biến động cực đoan vượt ngưỡng −4% đến −6%. Điều này phản ánh đặc điểm phân phối đuôi dày (fat-tailed distribution), cho thấy lợi suất thị trường không tuân theo phân phối chuẩn hoàn hảo và tồn tại rủi ro từ các sự kiện bất thường (black swan events).
+
+Kết quả này cũng liên hệ trực tiếp với ma trận tương quan VN30 trước đó: trong các giai đoạn thị trường biến động mạnh, áp lực bán lan rộng khiến nhiều cổ phiếu giảm cùng lúc, làm hệ số tương quan đồng chiều giữa các mã tăng cao và hình thành “rủi ro hệ thống” trên toàn thị trường.
     """)
     
     # --- PHẦN 3: MA TRẬN TƯƠNG QUAN HEATMAP ---
@@ -241,15 +246,14 @@ with tab1:
     
     with st.expander("❓ Khám phá:  Ma trận tương quan của lợi suất hàng ngày", expanded=True):
         st.info("""
-            Ma trận tương quan của lợi suất hàng ngày cho các cổ phiếu trong rổ VN30 cung cấp cái nhìn sâu sắc về mối quan hệ giữa các tài sản:
+            Ma trận tương quan lợi suất ngày của các cổ phiếu VN30 cho thấy phần lớn cổ phiếu có tương quan dương, phản ánh sự chi phối mạnh của rủi ro hệ thống và các yếu tố vĩ mô chung trên thị trường. Điều này cũng cho thấy khả năng đa dạng hóa danh mục trong VN30 còn hạn chế do nhiều cổ phiếu biến động cùng chiều.
 
-*   **Tương quan dương cao:** Biểu đồ nhiệt của ma trận tương quan cho thấy phần lớn các cổ phiếu trong rổ VN30 có hệ số tương quan dương với nhau. Điều này là đặc trưng của một thị trường chứng khoán, nơi các cổ phiếu thường có xu hướng biến động cùng chiều do chịu ảnh hưởng từ các yếu tố vĩ mô và tâm lý thị trường chung (Market Risk).
-    *   Các vùng màu nóng (ví dụ, màu đỏ trong heatmap) biểu thị các cặp cổ phiếu có tương quan dương mạnh, nghĩa là chúng thường tăng/giảm cùng nhau.
-    *   Các vùng màu lạnh (ví dụ, màu xanh lam) biểu thị tương quan âm hoặc thấp, cho thấy các cặp cổ phiếu có xu hướng biến động ngược chiều hoặc độc lập hơn.
-*   **Sự hiện diện của yếu tố thị trường chung:** Mức độ tương quan dương cao giữa các cổ phiếu là bằng chứng mạnh mẽ cho thấy có một hoặc một vài yếu tố chung đang chi phối sự biến động của toàn bộ thị trường VN30. Đây chính là tiền đề quan trọng nhất để áp dụng phân tích PCA, vì PCA sẽ tìm cách trích xuất những 'yếu tố chung' này thành các Thành phần chính (Principal Components).
-*   **Tiềm năng đa dạng hóa hạn chế:** Mức độ tương quan cao cũng ngụ ý rằng khả năng đa dạng hóa rủi ro bằng cách kết hợp các cổ phiếu trong rổ VN30 có thể bị hạn chế, vì phần lớn chúng đều phản ứng tương tự với các điều kiện thị trường.
+Các nhóm ngành, đặc biệt là nhóm Ngân hàng (ACB, BID, CTG, TCB, MBB, VCB...) có mức tương quan cao, thể hiện hiện tượng “sóng ngành” và dòng tiền vận động đồng thuận. Nhóm họ Vin (VIC, VHM) cũng có sự liên kết khá rõ nét.
 
-Nhìn chung, cả EDA và ma trận tương quan đều xác nhận tính chất 
+
+Ngược lại, các mã như GAS, PLX hay VNM có tương quan thấp hơn với phần còn lại của thị trường, cho thấy xu hướng biến động độc lập hơn và có tiềm năng hỗ trợ đa dạng hóa danh mục.
+
+Nhìn chung, sự tồn tại của các cụm cổ phiếu tương quan cao là tiền đề phù hợp để áp dụng PCA nhằm giảm chiều dữ liệu và trích xuất các thành phần chính đại diện cho xu hướng thị trường và xu hướng ngành.
         """)
 # --- TAB 2: THUẬT TOÁN PCA (FULL WIDTH STACKING) ---
 with tab2:
@@ -322,8 +326,14 @@ with tab2:
     st.plotly_chart(fig_scree, use_container_width=True)
     
     st.success(f"""
-        **Nhận định chuyên sâu:** Thành phần chính đầu tiên (PC1) giải thích được tới **{explained_variance_ratio[0]:.2f}%** biến động của toàn bộ thị trường. Điều này xác nhận cấu trúc thị trường VN30 có tính tập trung cực cao vào một nhân tố chung.
-    """)
+        **Nhận định chuyên sâu:** 
+        **PC1 chiếm tỷ trọng lớn (37.47%):** Cho thấy VN30 chịu ảnh hưởng mạnh từ nhân tố thị trường chung (Market Factor), phản ánh mức độ biến động đồng pha cao giữa các cổ phiếu.
+* **Xuất hiện “điểm gãy” (Elbow) rõ rệt:** Tỷ lệ phương sai giải thích giảm mạnh từ PC1 sang PC2 và gần như đi ngang ở các PC sau, cho thấy phần lớn thông tin tập trung ở những thành phần đầu tiên.
+
+* **Hiệu quả giảm chiều cao:** Chỉ với 2 PC đầu tiên đã giải thích gần 47% biến động; mở rộng đến 5 PC có thể bao quát hơn 60% thông tin của toàn bộ rổ VN30.
+
+* **Kết luận:** PCA hoạt động hiệu quả trong việc giảm chiều dữ liệu, cho phép rút gọn từ 30 biến cổ phiếu xuống còn khoảng 2–5 thành phần chính mà vẫn giữ được các đặc trưng biến động cốt lõi của thị trường.
+   """)
    # --- TAB 3: YẾU TỐ THỊ TRƯỜNG (FULL WIDTH) ---
 with tab3:
     st.header("3. So sánh Hiệu năng Thành phần Chính (PC1)")
@@ -426,8 +436,13 @@ with tab3:
     )
     st.plotly_chart(fig_line_comp, use_container_width=True)
     
-    st.success("**Kết luận tài chính:** Sự bám sát giữa đường màu xanh (PC1) và đường màu cam (VN30 thực tế) là bằng chứng cho thấy thuật toán PCA đã 'nén' thành công thông tin của 30 cổ phiếu vào 1 nhân tố duy nhất mà vẫn giữ được linh hồn của thị trường.")
-
+    st.success("**Kết luận tài chính:** 
+    * **PC1 và VN30 có xu hướng khá đồng pha**, đặc biệt tại các giai đoạn tăng mạnh và giảm sâu, cho thấy PC1 phản ánh tốt biến động thị trường chung.
+    
+    * **Xuất hiện phân kỳ sau 11/2025** khi VN30 vẫn giữ xu hướng ổn định nhưng PC1 giảm mạnh, cho thấy một mình PC1 chưa đủ đại diện cho toàn bộ thị trường.
+    
+    * **Kết luận:** PC1 phù hợp để nhận diện xu hướng và điểm đảo chiều của VN30, nhưng cần kết hợp thêm PC2, PC3 để mô hình hóa đầy đủ hơn.
+    ")
 
 # --- TAB 4: CƠ CẤU CHUYÊN SÂU (ADVANCED RESEARCH LAB) ---
 with tab4:
