@@ -436,13 +436,13 @@ with tab3:
     )
     st.plotly_chart(fig_line_comp, use_container_width=True)
     
-    st.success("**Kết luận tài chính:** 
+    st.success("""**Kết luận tài chính:** 
     * **PC1 và VN30 có xu hướng khá đồng pha**, đặc biệt tại các giai đoạn tăng mạnh và giảm sâu, cho thấy PC1 phản ánh tốt biến động thị trường chung.
     
     * **Xuất hiện phân kỳ sau 11/2025** khi VN30 vẫn giữ xu hướng ổn định nhưng PC1 giảm mạnh, cho thấy một mình PC1 chưa đủ đại diện cho toàn bộ thị trường.
     
     * **Kết luận:** PC1 phù hợp để nhận diện xu hướng và điểm đảo chiều của VN30, nhưng cần kết hợp thêm PC2, PC3 để mô hình hóa đầy đủ hơn.
-    ")
+    """)
 
 # --- TAB 4: CƠ CẤU CHUYÊN SÂU (ADVANCED RESEARCH LAB) ---
 with tab4:
