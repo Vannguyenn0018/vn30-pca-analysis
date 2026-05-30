@@ -115,7 +115,7 @@ def load_and_process_data(start_date, end_date, uploaded_file):
 # GIAO DIỆN CHÍNH
 # ==========================================
 st.title("📊 Phân tích cấu trúc thị trường chứng khoán VN30 bằng thuật toán PCA")
-st.markdown("Dự án này sử dụng phương pháp **Principal Component Analysis (PCA)** xây dựng từ đầu (toán học ma trận) để trích xuất các nhân tố chi phối thị trường.")
+st.markdown("Dự án này sử dụng phương pháp **Principal Component Analysis (PCA)** nhằm ứng dụng phân tích định lượng vào dữ liệu rổ VN30 để xây dựng bộ chỉ báo chiến lược, giúp nhà đầu tư quản trị rủi ro hệ thống và tối ưu hóa chiến lược luân chuyển dòng tiền.")
 
 # --- SIDEBAR ---
 
@@ -192,17 +192,17 @@ tab1, tab2, tab3, tab4 = st.tabs(["1. 📋 DỮ LIỆU &\n EDA",
 
 # --- TAB 1: EDA NÂNG CẤP (FULL WIDTH LEOUP) ---
 with tab1:
-    st.header("Khám phá dữ liệu (EDA)")
+    st.header("1. Khám phá dữ liệu (EDA)")
     st.markdown("Bước tiền xử lý đóng vai trò quyết định. Dữ liệu giá được chuyển sang **Log Returns** để đảm bảo tính dừng (stationarity) và phân phối chuẩn - hai giả định cực kỳ quan trọng của các mô hình định lượng tài chính.")
     
     # --- PHẦN 1: BẢNG TỶ SUẤT SINH LỢI ---
     st.markdown("---")
-    st.subheader("📊 Ma trận Tỷ suất sinh lợi (Log Returns)")
+    st.subheader("1.1 📊 Ma trận Tỷ suất sinh lợi (Log Returns)")
     st.dataframe(df_returns.head(10).T, use_container_width=True)
     
     # --- PHẦN 2: BIẾN ĐỘNG TỶ SUẤT SINH LỢI ---
     st.markdown("---")
-    st.subheader("📈 Biến động Tỷ suất sinh lợi (Volatility)")
+    st.subheader("1.2 📈 Biến động Tỷ suất sinh lợi (Volatility)")
     
     col_to_plot = 'VN30_INDEX' if 'VN30_INDEX' in df_returns.columns else df_returns.columns[0]
     fig_returns = px.line(df_returns, y=col_to_plot, 
@@ -215,18 +215,18 @@ with tab1:
     st.plotly_chart(fig_returns, use_container_width=True)
     
     st.markdown("""
-        **Góc nhìn tài chính:** Đồ thị lợi suất hàng ngày của VN30_INDEX cho thấy chuỗi dữ liệu dao động quanh mức trung bình gần bằng 0, phản ánh tính dừng (stationarity) của chuỗi lợi suất. Đây là điều kiện phù hợp để áp dụng các phương pháp phân tích định lượng như PCA hay các mô hình học máy, đồng thời hạn chế hiện tượng tương quan ảo.
+Đồ thị cho thấy chuỗi dữ liệu dao động quanh mức trung bình gần bằng 0, phản ánh stationarity của chuỗi lợi suất. Đây là điều kiện phù hợp để áp dụng các phương pháp phân tích định lượng như PCA hay các mô hình học máy, đồng thời hạn chế hiện tượng tương quan ảo.
 
 Biểu đồ cũng thể hiện rõ hiện tượng Volatility Clustering – các giai đoạn biến động mạnh thường xuất hiện liên tiếp nhau, xen kẽ với các giai đoạn thị trường ổn định. Đặc biệt quanh tháng 10/2025 và tháng 3/2026 xuất hiện nhiều phiên giảm sâu trên 4–6%, cho thấy thị trường chịu các cú sốc lớn và tâm lý biến động mạnh.
 
-Ngoài ra, phần lớn lợi suất dao động trong khoảng ±2%, nhưng vẫn xuất hiện các biến động cực đoan vượt ngưỡng −4% đến −6%. Điều này phản ánh đặc điểm phân phối đuôi dày (fat-tailed distribution), cho thấy lợi suất thị trường không tuân theo phân phối chuẩn hoàn hảo và tồn tại rủi ro từ các sự kiện bất thường (black swan events).
+Ngoài ra, phần lớn lợi suất dao động trong khoảng ±2%, nhưng vẫn xuất hiện các biến động cực đoan vượt ngưỡng −4% đến −6%. Điều này phản ánh đặc điểm fat-tailed distribution, cho thấy lợi suất thị trường không tuân theo phân phối chuẩn hoàn hảo và tồn tại rủi ro từ các black swan events.
 
 Kết quả này cũng liên hệ trực tiếp với ma trận tương quan VN30 trước đó: trong các giai đoạn thị trường biến động mạnh, áp lực bán lan rộng khiến nhiều cổ phiếu giảm cùng lúc, làm hệ số tương quan đồng chiều giữa các mã tăng cao và hình thành “rủi ro hệ thống” trên toàn thị trường.
     """)
     
     # --- PHẦN 3: MA TRẬN TƯƠNG QUAN HEATMAP ---
     st.markdown("---")
-    st.subheader("🔗 Ma trận Tương quan (Full rổ VN30)")
+    st.subheader("1.3 🔗 Ma trận Tương quan")
     
     # Loại bỏ VN30_Index ra khỏi ma trận để chỉ so sánh 30 cổ phiếu
     corr_full = df_returns.drop(columns=['VN30_INDEX'], errors='ignore').corr()
@@ -244,12 +244,11 @@ Kết quả này cũng liên hệ trực tiếp với ma trận tương quan VN3
                            margin=dict(l=0, r=0, t=30, b=0)) 
     st.plotly_chart(fig_corr, use_container_width=True)
     
-    with st.expander("❓ Khám phá:  Ma trận tương quan của lợi suất hàng ngày", expanded=True):
+    with st.expander("Ma trận tương quan của lợi suất hàng ngày", expanded=True):
         st.info("""
             Ma trận tương quan lợi suất ngày của các cổ phiếu VN30 cho thấy phần lớn cổ phiếu có tương quan dương, phản ánh sự chi phối mạnh của rủi ro hệ thống và các yếu tố vĩ mô chung trên thị trường. Điều này cũng cho thấy khả năng đa dạng hóa danh mục trong VN30 còn hạn chế do nhiều cổ phiếu biến động cùng chiều.
 
 Các nhóm ngành, đặc biệt là nhóm Ngân hàng (ACB, BID, CTG, TCB, MBB, VCB...) có mức tương quan cao, thể hiện hiện tượng “sóng ngành” và dòng tiền vận động đồng thuận. Nhóm họ Vin (VIC, VHM) cũng có sự liên kết khá rõ nét.
-
 
 Ngược lại, các mã như GAS, PLX hay VNM có tương quan thấp hơn với phần còn lại của thị trường, cho thấy xu hướng biến động độc lập hơn và có tiềm năng hỗ trợ đa dạng hóa danh mục.
 
@@ -265,19 +264,19 @@ with tab2:
 
     # --- PHẦN 1: MA TRẬN HIỆP PHƯƠNG SAI ---
     st.markdown("---")
-    st.subheader("📐 Ma trận Hiệp phương sai (Covariance Matrix)")
+    st.subheader("2.1 📐 Ma trận Hiệp phương sai (Covariance Matrix)")
     st.markdown("Đây là ma trận đo lường mức độ biến động cùng nhau của 30 mã cổ phiếu. Các giá trị trên đường chéo chính chính là phương sai của từng mã.")
     
     # Hiển thị ma trận hiệp phương sai (đã tính ở phần code chính) dưới dạng DataFrame
     cov_df = pd.DataFrame(cov_matrix, index=stock_names_list, columns=stock_names_list)
     st.dataframe(cov_df, use_container_width=True)
     
-    st.info("💡 Ma trận này chính là 'bản đồ rủi ro' của rổ VN30. Các trị riêng (Eigenvalues) sau đây sẽ được chiết xuất trực tiếp từ chính ma trận này.")
+    st.info("💡 Ma trận này chính là 'bản đồ rủi ro' của rổ VN30. Các Eigenvalues sau đây sẽ được chiết xuất trực tiếp từ chính ma trận này.")
 
     # --- PHẦN 2: SO SÁNH EIGENVALUES ---
     st.markdown("---")
-    st.subheader("🔢 So sánh kết quả Trị riêng (Eigenvalues)")
-    st.markdown("Bước này nhằm kiểm chứng độ chính xác của thuật toán thủ công so với hàm chuẩn của thư viện Numpy.")
+    st.subheader("2.2 🔢 So sánh kết quả Eigenvalues")
+    st.markdown("Kiểm chứng độ chính xác của thuật toán thủ công so với hàm chuẩn của thư viện Numpy.")
     
     numpy_eigenvals, _ = np.linalg.eigh(cov_matrix)
     numpy_eigenvals = np.sort(numpy_eigenvals)[::-1]
@@ -293,7 +292,7 @@ with tab2:
 
     # --- PHẦN 3: SCREE PLOT ---
     st.markdown("---")
-    st.subheader("📊 Phân tích phương sai giải thích (Scree Plot)")
+    st.subheader("2.3 📊 Phân tích phương sai giải thích")
     
     explained_variance_ratio = (sorted_eigenvalues / sum(sorted_eigenvalues)) * 100
     cumulative_explained_variance = np.cumsum(explained_variance_ratio)
@@ -326,8 +325,8 @@ with tab2:
     st.plotly_chart(fig_scree, use_container_width=True)
     
     st.success(f"""
-        **Nhận định chuyên sâu:** 
-        * **PC1 chiếm tỷ trọng lớn (37.47%):** Cho thấy VN30 chịu ảnh hưởng mạnh từ nhân tố thị trường chung (Market Factor), phản ánh mức độ biến động đồng pha cao giữa các cổ phiếu.
+        **Nhận xét:** 
+        * **PC1 chiếm tỷ trọng lớn (37.47%):** Cho thấy VN30 chịu ảnh hưởng mạnh từ nhân Market Factor, phản ánh mức độ biến động đồng pha cao giữa các cổ phiếu.
         * **Xuất hiện “điểm gãy” (Elbow) rõ rệt:** Tỷ lệ phương sai giải thích giảm mạnh từ PC1 sang PC2 và gần như đi ngang ở các PC sau, cho thấy phần lớn thông tin tập trung ở những thành phần đầu tiên.
 
         * **Hiệu quả giảm chiều cao:** Chỉ với 2 PC đầu tiên đã giải thích gần 47% biến động; mở rộng đến 5 PC có thể bao quát hơn 60% thông tin của toàn bộ rổ VN30.
