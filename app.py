@@ -83,7 +83,7 @@ def load_and_process_data(start_date, end_date, uploaded_file):
     panel_data.index = pd.to_datetime(panel_data.index).tz_localize(None).normalize()
 
     # Xử lý file CSV VN30_INDEX
-    vn30_index_data = pd.read_csv('VN30.csv')
+    vn30_index_data = pd.read_csv(r"D:\VS code\PCA\VN30.csv", encoding='utf-8')
     vn30_index_data = vn30_index_data[['Ngày', 'Lần cuối']]
     vn30_index_data.columns = ['Date', 'VN30_INDEX']
     if vn30_index_data['VN30_INDEX'].dtype == 'O':
@@ -139,7 +139,7 @@ start_date = pd.to_datetime('2025-05-05')
 end_date = pd.to_datetime('2026-04-29')
 
 # 3. Đường dẫn trực tiếp đến file CSV (Đảm bảo file VN30.csv đã được up lên cùng thư mục code)
-file_path = "VN30.csv.csv" 
+file_path = r"D:\VS code\PCA\VN30.csv" 
 
 # --- XỬ LÝ & LƯU TRỮ TRẠNG THÁI ---
 with st.spinner('Đang tải dữ liệu tự động và chạy thuật toán PCA...'):
