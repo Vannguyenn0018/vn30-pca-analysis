@@ -1,10 +1,10 @@
 streamlit
-pandas
 numpy
+pandas
 yfinance
-scikit-learn
 matplotlib
 seaborn
 plotly
-scipy
+scikit-learn
 statsmodels
+scipy
