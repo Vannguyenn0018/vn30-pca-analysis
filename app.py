@@ -15,7 +15,7 @@ from scipy.spatial.distance import squareform
 # CẤU HÌNH TRANG WEB
 # ==========================================
 st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="🏛️")
-plt.rcParams['font.family'] = 'Montserrat'
+plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['axes.unicode_minus'] = False
 # ==========================================
 # ĐỊNH DẠNG TABS NỔI 3D
