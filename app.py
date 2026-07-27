@@ -15,7 +15,7 @@ from scipy.spatial.distance import squareform
 # CẤU HÌNH TRANG WEB
 # ==========================================
 st.set_page_config(page_title="VN30 PCA Analysis", layout="wide", page_icon="🏛️")
-plt.rcParams['axes.unicode_minus'] = False
+plt.rcParams['font.family'] = 'Montserrat'
 plt.rcParams['axes.unicode_minus'] = False
 # ==========================================
 # ĐỊNH DẠNG TABS NỔI 3D
@@ -83,7 +83,7 @@ def load_and_process_data(start_date, end_date, uploaded_file):
     panel_data.index = pd.to_datetime(panel_data.index).tz_localize(None).normalize()
 
     # Xử lý file CSV VN30_INDEX
-    vn30_index_data = pd.read_csv("VN30.csv", encoding='utf-8')
+    vn30_index_data = pd.read_csv(r"D:\VS code\PCA\VN30.csv", encoding='utf-8')
     vn30_index_data = vn30_index_data[['Ngày', 'Lần cuối']]
     vn30_index_data.columns = ['Date', 'VN30_INDEX']
     if vn30_index_data['VN30_INDEX'].dtype == 'O':
