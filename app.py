@@ -66,7 +66,7 @@ st.markdown("""
 # HÀM XỬ LÝ DỮ LIỆU 
 # ==========================================
 @st.cache_data
-def load_and_process_data(start_date, end_date, VN30.csv):
+def load_and_process_data(start_date, end_date, uploaded_file):
     # Khai báo chuẩn danh sách mã (đã bao gồm .VN để tải Yahoo Finance)
     tickers_yf = [
         "ACB.VN", "BID.VN", "BVH.VN", "CTG.VN", "FPT.VN",
