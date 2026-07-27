@@ -290,39 +290,44 @@ with tab2:
     # Hiển thị bảng so sánh (Full width)
     st.dataframe(comp_df, use_container_width=True)
 
-    # --- PHẦN 3: SCREE PLOT ---
-    st.markdown("---")
-    st.subheader("2.3 📊 Phân tích phương sai giải thích")
-    
-    explained_variance_ratio = (sorted_eigenvalues / sum(sorted_eigenvalues)) * 100
-    cumulative_explained_variance = np.cumsum(explained_variance_ratio)
-    
-    fig_scree = go.Figure()
-    # Bar chart cho phương sai riêng lẻ
-    fig_scree.add_trace(go.Bar(
-        x=[f'PC{i+1}' for i in range(10)], 
-        y=explained_variance_ratio[:10], 
-        name='Phương sai riêng lẻ (%)', 
-        marker_color='skyblue'
-    ))
-    # Line chart cho phương sai tích lũy
-    fig_scree.add_trace(go.Scatter(
-        x=[f'PC{i+1}' for i in range(10)], 
-        y=cumulative_explained_variance[:10], 
-        mode='lines+markers', 
-        name='Phương sai tích lũy (%)', 
-        line=dict(color='orange', width=3)
-    ))
-    
-    fig_scree.update_layout(
-        title="Scree Plot: 10 Thành phần chính đầu tiên",
-        xaxis_title="Thành phần chính (Principal Components)",
-        yaxis_title="Tỷ lệ phương sai giải thích (%)",
-        template="plotly_white",
-        height=550,
-        legend=dict(orientation="h", y=1.05, yanchor="bottom", x=0.5, xanchor="center")
-    )
-    st.plotly_chart(fig_scree, use_container_width=True)
+   # --- PHẦN 3: SCREE PLOT ---
+st.markdown("---")
+st.subheader("2.3 📊 Phân tích phương sai giải thích")
+
+explained_variance_ratio = (sorted_eigenvalues / sum(sorted_eigenvalues)) * 100
+cumulative_explained_variance = np.cumsum(explained_variance_ratio)
+
+# Chuyển đổi sang list Python thuần túy để tránh lỗi JSON Serializable
+x_vals = [f'PC{i+1}' for i in range(10)]
+y_bar_vals = explained_variance_ratio[:10].tolist()
+y_line_vals = cumulative_explained_variance[:10].tolist()
+
+fig_scree = go.Figure()
+# Bar chart cho phương sai riêng lẻ
+fig_scree.add_trace(go.Bar(
+    x=x_vals, 
+    y=y_bar_vals, 
+    name='Phương sai riêng lẻ (%)', 
+    marker_color='skyblue'
+))
+# Line chart cho phương sai tích lũy
+fig_scree.add_trace(go.Scatter(
+    x=x_vals, 
+    y=y_line_vals, 
+    mode='lines+markers', 
+    name='Phương sai tích lũy (%)', 
+    line=dict(color='orange', width=3)
+))
+
+fig_scree.update_layout(
+    title="Scree Plot: 10 Thành phần chính đầu tiên",
+    xaxis_title="Thành phần chính (Principal Components)",
+    yaxis_title="Tỷ lệ phương sai giải thích (%)",
+    template="plotly_white",
+    height=550,
+    legend=dict(orientation="h", y=1.05, yanchor="bottom", x=0.5, xanchor="center")
+)
+st.plotly_chart(fig_scree, use_container_width=True)
     
     st.success(f"""
         **Nhận xét:** 
