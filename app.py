@@ -301,9 +301,9 @@ with tab2:
     cumulative_explained_variance = np.cumsum(explained_variance_ratio)
 
     # Chuyển đổi sang list Python thuần túy để tránh lỗi JSON Serializable
-    x_vals = [f'PC{i+1}' for i in range(10)]
-    y_bar_vals = explained_variance_ratio[:10].tolist()
-    y_line_vals = cumulative_explained_variance[:10].tolist()
+    x_vals = [f'PC{i+1}' for i in range(min(10, len(explained_variance_ratio)))]]
+    y_bar_vals = [float(val) for val in explained_variance_ratio[:10]]
+    y_line_vals = [float(val) for val in cumulative_explained_variance[:10]]
 
     fig_scree = go.Figure()
     # Bar chart cho phương sai riêng lẻ
